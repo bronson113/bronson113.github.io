@@ -1,5 +1,6 @@
-Here you can say lots of fun things about your site.
+Cybersecurity B.S. Student @ Purdue University
 
-Maybe say a some things about yourself.
+Active member of Taiwanese CTF Team Goburin'. Specialize in ****Pwnable* and all kind of miscellaneous challenges.
 
-Or maybe what you plan to blog about.
+I enjoy researching cool tricks and quirks in various computing systems and languages, as well as optimizing thing with techniques and algorithms.
+

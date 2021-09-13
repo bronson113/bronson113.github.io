@@ -31,7 +31,7 @@ Happy guessing! :^)
 
 Inspecting the page source shows us an API endpoint `/query`. It takes a path, a starting position, and a ending position, then counts the unique bytes in a range.
 
-```jsx
+```js
 <script>
       const BLOCK_SIZE = 1024;
       async function run() {

@@ -339,8 +339,8 @@ for i in flag[:len(checkpoint)]:
     else:
         out+=tar[acc] #replace unknown char with A~Z for reference and better guessing
         replaces[i] = tar[acc]
-				#out += '~'
-				#replaces[i] = '~'
+	    #out += '~'
+	    #replaces[i] = '~'
         acc+=1
 
 print(out)

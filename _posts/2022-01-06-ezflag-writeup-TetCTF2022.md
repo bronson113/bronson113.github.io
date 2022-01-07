@@ -48,7 +48,7 @@ def handle_post() -> None:
     write_location('/uploads/' + normalized_name)
 ```
 
-However, since it doesn’t check the file name again after sanitization, we can abuse that to create the file name we want. By supplying a file with `.p./y` extension, the normalization will remove the `./`from the file name and give us the desire `.py` extension.
+The `valid_file_name` function ensures that the file name is a relative path and doesn’t contain `..` nor `.py`. However, since it doesn’t check the file name again after sanitization, we can abuse the sanitization to bypass the filter. By supplying a file with `.p./y` extension, the normalization will remove the `./`from the file name and give us the desire `.py` extension.
 
 Simply upload file with `import os;os.system('cat /flag')` give us the flag.
 

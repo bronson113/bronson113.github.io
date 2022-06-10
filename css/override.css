@@ -52,12 +52,18 @@ hr {
     backdrop-filter: blur(3px);
 }
 
+.site-title, .site-title:hover, .site-title:focus, .site-title:active {
+    text-decoration: none;
+}
 
 .page-content {
     margin-top: 40px;
 }
+.site-nav {
+    line-height:100%;
+}
 
-.trigger a{
+.trigger .page-link{
     display: inline-block;
     vertical-align: middle;
     -webkit-transform: perspective(1px) translateZ(0);
@@ -68,9 +74,10 @@ hr {
     transition-property: color;
     -webkit-transition-duration: 0.3s;
     transition-duration: 0.3s;
+    text-decoration: none;
 }
 
-.trigger a:before{
+.trigger .page-link:before{
     content: "";
     position: absolute;
     z-index: -1;
@@ -91,12 +98,8 @@ hr {
     transition-timing-function: ease-out;
 }
 
-.site-title:hover, .site-title:focus, .site-title:active,
-.trigger a:hover, .trigger a:focus, .trigger a:active{
-    text-decoration: none;
-}
 
-.trigger a:hover::before, .trigger a:focus::before, .trigger a:active::before{
+.trigger .page-link:hover::before, .trigger .page-link:focus::before, .trigger .page-link:active::before{
     -webkit-transform: scaleX(1);
     transform: scaleX(1);
 }

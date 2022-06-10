@@ -26,6 +26,8 @@ alias.url += ( "/uploads" => "/var/www/upload" )
 cgi.assign = ( ".py" => "/usr/bin/python3" )
 ```
 
+
+
 But how do we upload our file?
 
 We know that the server is handled by upload.py. In the `handle_post` function we can see that it takes the file, check the file name is valid, normalized it, then store the file in the upload folder.
@@ -133,6 +135,7 @@ part 2 flag: `TetCTF{cc17b4cd7d2e4cb0af9ef992e472b3ab}`
 
 # Appendix 1 - shell.py
 
+{% capture shell_py %}
 ```python
 import requests
 import base64
@@ -164,8 +167,14 @@ while True:
 
 #TetCTF{65e95f4eacc1fe7010616e051f1c610a}
 ```
+{% endcapture %}
+
+{% include widgets/toggle-field.html toggle-name="shell_py"
+    button-text="Show shell.py" toggle-text=shell_py%}
 
 # Appendix 2 - exp.py
+
+{% capture exp_py %}
 
 ```python
 import socket
@@ -229,3 +238,8 @@ s.close()
 
 #TetCTF{cc17b4cd7d2e4cb0af9ef992e472b3ab}
 ```
+{% endcapture %}
+
+{% include widgets/toggle-field.html toggle-name="exp_py"
+    button-text="Show exp.py" toggle-text=exp_py%}
+

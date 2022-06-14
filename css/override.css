@@ -107,3 +107,7 @@ hr {
 #share-buttons div{
     z-index: -1;
 }
+
+.svg-icon {
+    padding-right:0;
+}

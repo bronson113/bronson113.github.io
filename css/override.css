@@ -50,6 +50,7 @@ hr {
     width: 100%;
     background-color: #f4f0f460;
     backdrop-filter: blur(3px);
+    z-index: 1;
 }
 
 .site-title, .site-title:hover, .site-title:focus, .site-title:active {
@@ -102,10 +103,6 @@ hr {
 .trigger .page-link:hover::before, .trigger .page-link:focus::before, .trigger .page-link:active::before{
     -webkit-transform: scaleX(1);
     transform: scaleX(1);
-}
-
-#share-buttons div{
-    z-index: -1;
 }
 
 .svg-icon {

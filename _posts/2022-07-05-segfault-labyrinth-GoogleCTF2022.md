@@ -1,10 +1,5 @@
 # GoogleCTF 2022 - segfault labyrinth
 
-Created time: July 4, 2022 8:00 PM
-Status: Work In Progress
-events: GoogleCTF2022
-types: misc, pwn
-
 # Challenge Description
 
 ```
@@ -41,7 +36,9 @@ It seems like there wasn’t much to work with, only rdi is left, which doesn’
 
 # Syscall - mmap
 
-So now, how do I get a libc address without any reference? Maybe somehow the syscall allowed can provide some useful information. From doing heap exploitation before, I know there is a common trick to leak libc address by mallocing a large chunk, which make libc use mmap to allocate the chunk ([https://github.com/bennofs/docs/blob/master/hxp-2017/impossible.md](https://github.com/bennofs/docs/blob/master/hxp-2017/impossible.md)). If we call mmap with a null pointer as address, the kernel will decide where the new chunk should be placed at. Apparently the kernel tend to allocate chunks next to each other, though this is not guaranteed in the manual. From my understanding, since libc is mmaped by the loader, if we mmaped another large chunk again, the kernel will put it next to libc, so the offset to libc is fixed.
+So now, how do I get a libc address without any reference? Maybe somehow the syscall allowed can provide some useful information. From doing heap exploitation before, I know there is a common trick to leak libc address by mallocing a large chunk, which make libc use mmap to allocate the chunk ([https://github.com/bennofs/docs/blob/master/hxp-2017/impossible.md](https://github.com/bennofs/docs/blob/master/hxp-2017/impossible.md)). 
+
+If we call mmap with a null pointer as address, the kernel will decide where the new chunk should be placed at. Apparently the kernel tend to allocate chunks next to each other, though this is not guaranteed in the manual. From my understanding, since libc is mmaped by the loader, if we mmaped another large chunk again, the kernel will put it next to libc, so the offset to libc is fixed.
 
 ![mmap manual](/img/GoogleCTF2022-segfault-labyrinth-mmap.png)
 

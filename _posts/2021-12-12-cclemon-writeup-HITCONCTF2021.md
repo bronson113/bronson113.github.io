@@ -21,7 +21,7 @@ Opening the file, we see that there is some byte code, it resembles python byte 
 
 
 
-With that, we slowly build up a python version of the code, as shown here in [solve.py](http://solve.py), we then run it with pypy3 to receive the flag. The initial version doesn't produce the right answer, so we need to recheck each comparison and make sure the python script is running exactly the same thing as the byte code
+With that, we slowly build up a python version of the code, as shown here in [solve.py](#appendix---solvepy), we then run it with pypy3 to receive the flag. The initial version doesn't produce the right answer, so we need to recheck each comparison and make sure the python script is running exactly the same thing as the byte code
 
 `hitcon{42978937495235537896}`
 

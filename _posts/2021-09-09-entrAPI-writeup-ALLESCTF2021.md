@@ -142,7 +142,7 @@ for st in range(len(checkpoint), LEN):
 print(flag)
 ```
 
-PS. In retrospective, we could have done binary search as the result of this test should be false before the first occurrence of the character and true afterward, but I only realized that after the competition. This can make the query count O(NlogN) instead of O(N^2) where N is the length of the file.
+PS. In retrospective, we could have done binary search as the result of this test should be false before the first occurrence of the character and true afterward, but I only realized that after the competition. This can make the query count $$ O(NlogN) $$ instead of $$ O(N^2) $$ where N is the length of the file.
 
 The result we get from the flag file is something like this:
 
@@ -203,7 +203,7 @@ Wow! What a surprise, there is a hidden `/flag` endpoint that we can access if w
 # Finally The Flag!
 
 
-So since we don't know the full hash, the next best thing we can do is to list out all the possible hashes, then check if them exists on the hinted site `[crackstation.net](http://crackstation.net)`. Afterall, we know 4 out of 10 total numbers, so there can only be so many options to try.
+So since we don't know the full hash, the next best thing we can do is to list out all the possible hashes, then check if them exists on the hinted site [crackstation.net](http://crackstation.net). Afterall, we know 4 out of 10 total numbers, so there can only be so many options to try.
 
 I wrote a quick script and dumped all possible hashes (720 of them) and check them 20 by 20 on the website, I soon found a partial match, giving us the authorization code `gibflag`
 
@@ -214,7 +214,7 @@ After that it's just sending a request to the `/flag` endpoint with the authoriz
 
 leakfile.py
 
-```python
+~~~ python
 import requests as r
 import threading
 
@@ -267,7 +267,7 @@ for st in range(len(checkpoint), LEN):
         checkpoint.append((st, -1))
     print(checkpoint[-200:])
 print(flag)
-```
+~~~
 
 restore.py
 

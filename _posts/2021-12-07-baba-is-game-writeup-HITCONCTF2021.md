@@ -67,7 +67,9 @@ if event.key == pygame.K_ESCAPE:
 
 After playing around with the GUI version of the game, we notice that putting blocks in an arrangement that spells out 'x has you' allows us to control x, which is different from the original game. This bug allow us to move jiji out of the way, construct baba is win, and move jiji onto baba to win. After getting the sequence from the modified GUI, we can submit the movements to the remote server (convert it so that we send each character one by one) and get the flag . 
 
-`hitcon{th3_0r1g1n4l_m4p_1s_N9RV-FZU9}`
+``` plaintext
+hitcon{th3_0r1g1n4l_m4p_1s_N9RV-FZU9}
+```
 
 We later know that the intended solution has something to do with the reordering of tile when undoing moves.
 

@@ -151,7 +151,11 @@ The result we get from the flag file is something like this:
 'un_35', 'un_36', 'un_1', 'un_14', 'un_2', 'un_35', 'un_2', 'un_42', 'un_0', 'un_4', 'un_2', 'un_4', 'un_14', 'un_14', 'un_2', 'un_36', 'un_14', 'un_1', 'un_1', 'un_10', 'un_2', 'un_18', 'un_14', 'un_9', 'un_2', 'un_21', 'un_0', 'un_62', 'un_21', 'un_2', 'un_6', 'un_7', 'un_4', 'un_9', 'un_14', 'un_11', 'un_10', 'un_2', 'un_1', 'un_6', 'un_8', 'un_9', 'un_6', 'un_4', 'un_1', 'un_80', 'un_81', 'un_82', 'un_83', 'un_83', 'A', 'S', 'un_87', 'un_88', 'un_89', 'un_90', 'un_42', 'un_92', 'un_87', 'un_9', 'un_81', 'un_96', 'un_88', 'un_92', 'un_96', 'un_100', '}']
 ```
 
-We thought that we can just solve cryptogram of this and get the flag, but sadly, there are some random characters appended to the end, so that wasn't possible 😢. We end up with something like this `ALLES!{is it encryption if there's no key?also a bit too lossy for high entropy secrets?????AS????????????}`
+We thought that we can just solve cryptogram of this and get the flag, but sadly, there are some random characters appended to the end, so that wasn't possible 😢. We end up with something like this 
+
+``` plaintext
+ALLES!{is it encryption if there's no key?also a bit too lossy for high entropy secrets?????AS????????????}
+```
 
 # Happy Guessing!
 
@@ -207,14 +211,18 @@ So since we don't know the full hash, the next best thing we can do is to list o
 
 I wrote a quick script and dumped all possible hashes (720 of them) and check them 20 by 20 on the website, I soon found a partial match, giving us the authorization code `gibflag`
 
-After that it's just sending a request to the `/flag` endpoint with the authorization header, and receive the lovely flag. `ALLES!{is_it_encryption_if_there's_no_key?also_a_bit_too_lossy_for_high_entropy_secrets:MRPPASQHX3b0QrMWH0WF}`
+After that it's just sending a request to the `/flag` endpoint with the authorization header, and receive the lovely flag.
+
+``` plaintext
+ALLES!{is_it_encryption_if_there's_no_key?also_a_bit_too_lossy_for_high_entropy_secrets:MRPPASQHX3b0QrMWH0WF}
+```
+
 
 # Appendix - Relevant Files
 
+## leakfile.py
 
-leakfile.py
-
-~~~ python
+``` python
 import requests as r
 import threading
 
@@ -267,9 +275,9 @@ for st in range(len(checkpoint), LEN):
         checkpoint.append((st, -1))
     print(checkpoint[-200:])
 print(flag)
-~~~
+```
 
-restore.py
+## restore.py
 
 ```python
 checkpoint = []

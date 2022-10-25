@@ -71,7 +71,9 @@ P.S. While I am writing this write up, I notice that this wasn’t 100% consiste
 
 ![executing the exploit](/img/GoogleCTF2022-segfault-labyrinth-exec.png)
 
-Flag: `CTF{c0ngratulat1ons_oN_m4k1nG_1t_thr0uGh_th3_l4Byr1nth}` 
+``` plaintext
+Flag: CTF{c0ngratulat1ons_oN_m4k1nG_1t_thr0uGh_th3_l4Byr1nth}
+```
 
 # Intended Solution - segfault maze
 

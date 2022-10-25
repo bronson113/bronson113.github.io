@@ -125,7 +125,9 @@ beg me: plz
 ok, here is your flag: BALSN{however_Admin_passed_the_Dark_knight_with_hiding_behind_Someone}
 ```
 
-flag: `BALSN{however_Admin_passed_the_Dark_knight_with_hiding_behind_Someone}`
+``` plaintext
+flag: BALSN{however_Admin_passed_the_Dark_knight_with_hiding_behind_Someone}
+```
 
 I later learned that I'm writing into an alternate data stream (ads), which isn't a file, so os.listdir() couldn't find it. It seems like that windows ads have been abused by many to write hidden data into the system, and have suffer bad reputations because of that.
 

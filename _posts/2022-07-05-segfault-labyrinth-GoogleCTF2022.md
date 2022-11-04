@@ -1,6 +1,11 @@
+---
+title: GoogleCTF 2022 - segfault labyrinth
+---
+
 # GoogleCTF 2022 - segfault labyrinth
 
 # Challenge Description
+---
 
 ```
 Be careful! One wrong turn and the whole thing comes crashing down
@@ -13,6 +18,7 @@ Solves: (189 pt/ 56 solves)
 The challenge code can be found here: [https://github.com/google/google-ctf/tree/master/2022/misc-segfault-labyrinth](https://github.com/google/google-ctf/tree/master/2022/misc-segfault-labyrinth)
 
 # Inspection
+---
 
 I first put the challenge binary into ghidra and start reversing. We can see that the challenge binary reads the size of the input, read the shellcode, and then execute the shellcode.
 
@@ -26,7 +32,7 @@ That’s quite a specific list of syscall allowed. We know that the flag is read
 
 ![Reversing to find flag on stack](/img/GoogleCTF2022-segfault-labyrinth-rev-flag.png)
 
-# Checking environment
+## Checking environment
 
 To start the exploit, I decide to checkout what state we have to work with when the code start executing our code. By sending “\xcc” as our shellcode, we can trap the process at the start of the shellcode. 
 
@@ -34,7 +40,7 @@ To start the exploit, I decide to checkout what state we have to work with when 
 
 It seems like there wasn’t much to work with, only rdi is left, which doesn’t seems to point to anything useful. I start searching for ways to obtain a stack address, since then we can use a offset to the flag point and read the flag. Reading the blog post [https://nickgregory.me/post/2019/04/06/pivoting-around-memory/](https://nickgregory.me/post/2019/04/06/pivoting-around-memory/), I know that if I leaked the libc base address, I can leverage the environment pointer to get to the stack. After that I’ll just need to find the offset from the environment to the flag to write it out.
 
-# Syscall - mmap
+## Syscall - mmap
 
 So now, how do I get a libc address without any reference? Maybe somehow the syscall allowed can provide some useful information. From doing heap exploitation before, I know there is a common trick to leak libc address by mallocing a large chunk, which make libc use mmap to allocate the chunk ([https://github.com/bennofs/docs/blob/master/hxp-2017/impossible.md](https://github.com/bennofs/docs/blob/master/hxp-2017/impossible.md)). 
 
@@ -76,6 +82,7 @@ Flag: CTF{c0ngratulat1ons_oN_m4k1nG_1t_thr0uGh_th3_l4Byr1nth}
 ```
 
 # Intended Solution - segfault maze
+---
 
 When the code start executing, it allocated the structure shown in the graph. Each box represents a pointer, the box without an arrow points to a mmap chunk with no permission, and only one pointer within each chunk point to a readable and writable chuck. after 10 layers, the pointer point to the flag.
 
@@ -83,7 +90,7 @@ When the code start executing, it allocated the structure shown in the graph. Ea
 
 In order to retrieve the flag, we need to carefully navigate through this maze, as any segfault will end out attempt and close the connection.
 
-# Syscall - write
+## Syscall - write
 
 So how do we distinguish between a readable/writable chunk from the other chunk? Directly accessing the memory clearly doesn’t work, as it would just raise a segfault error. How about syscall?
 
@@ -221,5 +228,3 @@ p.interactive()
 
 {% include widgets/toggle-field.html toggle-name="exp_py"
     button-text="Show exp.py" toggle-text=exp_py%}
-
-

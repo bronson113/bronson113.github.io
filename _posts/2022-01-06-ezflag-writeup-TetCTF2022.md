@@ -1,4 +1,8 @@
-# Ezflag - TetCTF 2022
+---
+title: TetCTF 2022 - Ezflag
+---
+
+# TetCTF 2022 - Ezflag
 
 
 # Challenge Description
@@ -246,4 +250,3 @@ s.close()
 
 {% include widgets/toggle-field.html toggle-name="exp_py"
     button-text="Show exp.py" toggle-text=exp_py%}
-

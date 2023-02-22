@@ -43,12 +43,16 @@ It is clear that we need to somehow extract  `d` or `phi` based on `enc_d` and `
 Since $e = 3$, the first though might be to hope that d is small ( $<n^{1/3}$ ), then we can just take cube root of it to get d. However, in this challenge, both number are too large.
 
 The next thing is to somehow utilize the fact that e is small. We can observe the following two equations.
+
 $$ e\times d \equiv 1 \pmod{\phi(n)} $$ 
 $$ e\times d = k_1 \times\phi(n) + 1 $$
+
+
 Because  $e=3$, $d<n$
 Therefore $e\times d < 3n$, and $k_1 \in \{1, 2\}$ 
 
 We now expend `enc_d` according to the above equation
+
 $$ \begin{align} d_{enc}  &\equiv d^3 &\pmod{n} 
 \\ e^3 \times d_{enc} &\equiv e^3\times d^3 &\pmod{n} 
 \\ 27 \times d_{enc} &\equiv (ed)^3 &\pmod{n}
@@ -61,12 +65,14 @@ We can view the last equation as a quadratic equation with respect to $\phi(n)$,
 
 ## Substitude phi(n)
 Recalling that 
+
 $$\begin{align}\phi(n) &= (p-1)(q-1) 
 \\ &= pq - p - q - 1 
 \\ &= n - p - q + 1\end{align}$$
 $$\phi(n) \equiv -(p+q) + 1 \pmod{n} $$
 
 If we define $r = (p+q)$, we can transfore the above equation
+
 $$\begin{align} 3k_1^2\phi^2(n) + 3k_1\phi(n) + k_1^3\phi_{enc} + 1 - 27\times d_{enc}&\equiv 0 \pmod{n}
 \\ 3k_1^2(1-r)^2 + 3k_1(1-r) + k_1^3\phi_{enc} + 1 - 27\times d_{enc}&\equiv 0 \pmod{n}
 \\ 3k_1^2(1-2r+r^2) + 3k_1(1-r) + k_1^3\phi_{enc} + 1 - 27\times d_{enc}&\equiv 0 \pmod{n}
@@ -94,7 +100,9 @@ $$ 3k_1^2r^2 + (-6k_1^2-3k_1)r + (3k_1^2 + 3k_1 + k_1^3\phi_{enc} + 1 - 27\times
 Therefore, we can bruteforce all possible $k_2$ and attempt to solve the equation under integer. The root of the equation will be $(p+q)$
 # Recover phi, p, q
 From the previous equation, we can recover $(p+q)$, so phi can be calculated easily
+
 $$\phi(n) = n - r + 1 $$
+
 To get p or q from n and phi(n), we can do the following calculation
 
 $$\begin{align}  \phi(n) &= n - p - q + 1
@@ -102,6 +110,7 @@ $$\begin{align}  \phi(n) &= n - p - q + 1
 \\ p^2 - pn + p - p\phi(n) - n&=0
 \\ p^2 - (n+phi(n) -1)p -n &=0
 \\ \end{align}$$
+
 Solving the quadrtic equation give us p, q as roots
 After that, it's just recovering d, and decrypt the flag :)
 

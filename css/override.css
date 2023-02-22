@@ -108,3 +108,15 @@ hr {
 .svg-icon {
     padding-right:0;
 }
+
+/* Mathjax scroll equation */
+mjx-container {
+	overflow-x: auto;
+	overflow-y: hidden;
+	max-width: 100%;
+	padding:0.1rem 0.2rem;
+}
+span.MJXc-display{
+	overflow-x: auto;
+	overflow-y: hidden;
+}

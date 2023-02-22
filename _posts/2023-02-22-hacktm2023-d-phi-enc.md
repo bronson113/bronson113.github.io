@@ -39,7 +39,7 @@ print(f"{enc_flag = }")
 ```
 It is clear that we need to somehow extract  `d` or `phi` based on `enc_d` and `enc_phi`
 
-## Small e
+# Small e
 Since $e = 3$, the first though might be to hope that d is small ( $<n^{1/3}$ ), then we can just take cube root of it to get d. However, in this challenge, both number are too large.
 
 The next thing is to somehow utilize the fact that e is small. We can observe the following two equations.
@@ -63,7 +63,7 @@ $$ 3k_1^2\phi^2(n) + 3k_1\phi(n) + k_1^3\phi_{enc} + 1 - 27\times d_{enc}\equiv 
 
 We can view the last equation as a quadratic equation with respect to $\phi(n)$, as all other variables are given. However, since n is not a prime, solving such equation is not trival. Therefore we need to furture simplify the equation.
 
-## Substitude phi(n)
+# Substitude phi(n)
 Recalling that 
 
 $$\begin{align}\phi(n) &= (p-1)(q-1) 

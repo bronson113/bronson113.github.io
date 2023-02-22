@@ -45,10 +45,10 @@ Since $e = 3$, the first though might be to hope that d is small ( $\lt n^{1/3}$
 The next thing is to somehow utilize the fact that e is small. We can observe the following two equations.
 
 $$ 
-\begin{align\*}
+\begin{align}
 e\times d &\equiv 1 &\pmod{\phi(n)}\\ 
 e\times d &= k_1 \times\phi(n) + 1 &\\ 
-\end{align\*}
+\end{align}
 $$
 
 
@@ -58,14 +58,14 @@ Therefore $e\times d \lt 3n$, and $k_1 \in \{1, 2\}$
 We now expend `enc_d` according to the above equation
 
 $$ 
-\begin{align\*} 
+\begin{align} 
 d_{enc}  &\equiv d^3 &\pmod{n} \\ 
 e^3 \times d_{enc} &\equiv e^3\times d^3 &\pmod{n} \\ 
 27 \times d_{enc} &\equiv (ed)^3 &\pmod{n}  \\ 
 &\equiv (k_1\phi(n) + 1)^3 &\pmod{n}  \\ 
 &\equiv (k_1^3\phi^3(n) + 3k_1^2\phi^2(n) + 3k_1\phi(n) + 1) &\pmod{n}\\ 
 &\equiv (k_1^3\phi_{enc} + 3k_1^2\phi^2(n) + 3k_1\phi(n) + 1) &\pmod{n}  \\
-\end{align\*} 
+\end{align} 
 $$ 
 
 $$ 3k_1^2\phi^2(n) + 3k_1\phi(n) + k_1^3\phi_{enc} + 1 - 27\times d_{enc}\equiv 0 \pmod{n} $$
@@ -76,11 +76,11 @@ We can view the last equation as a quadratic equation with respect to $\phi(n)$,
 Recalling that 
 
 $$
-\begin{align\*}
+\begin{align}
 \phi(n) &= (p-1)(q-1) \\ 
 &= pq - p - q - 1 \\ 
 &= n - p - q + 1 \\ 
-\end{align\*}
+\end{align}
 $$
 
 $$\phi(n) \equiv -(p+q) + 1 \pmod{n} $$
@@ -88,12 +88,12 @@ $$\phi(n) \equiv -(p+q) + 1 \pmod{n} $$
 If we define $r = (p+q)$, we can transfore the above equation
 
 $$
-\begin{align\*} 
+\begin{align} 
 3k_1^2\phi^2(n) + 3k_1\phi(n) + k_1^3\phi_{enc} + 1 - 27\times d_{enc}&\equiv 0 \pmod{n} \\ 
 3k_1^2(1-r)^2 + 3k_1(1-r) + k_1^3\phi_{enc} + 1 - 27\times d_{enc}&\equiv 0 \pmod{n} \\ 
 3k_1^2(1-2r+r^2) + 3k_1(1-r) + k_1^3\phi_{enc} + 1 - 27\times d_{enc}&\equiv 0 \pmod{n} \\ 
 3k_1^2r^2 + (-6k_1^2-3k_1)r + (3k_1^2 + 3k_1 + k_1^3\phi_{enc} + 1 - 27\times d_{enc}) &\equiv 0 \pmod{n} \\ 
-\end{align\*}
+\end{align}
 $$
 
 Note that since $r = p+q$, it's small compare to n.
@@ -101,7 +101,7 @@ Assuming that $p>q$
 Since p and q is generate to be 1024 bits, $p/q < 2$
 
 $$ 
-\begin{align\*} \\ 
+\begin{align} \\ 
 r^2 &= (p+q)^2\\ 
 &= p^2 + q^2 + 2pq\\ 
 &= p^2 + q^2 + 2n\\ 
@@ -111,7 +111,7 @@ r^2 &= (p+q)^2\\
 3k_1^2r^2 &\le 3\times 2^2\times r^2\\ 
 &= 12\times 7n\\ 
 &= 84n\\ 
-\end{align\*}
+\end{align}
 $$
 
 $$ 3k_1^2r^2 + (-6k_1^2-3k_1)r + (3k_1^2 + 3k_1 + k_1^3\phi_{enc} + 1 - 27\times d_{enc}) < 84n $$
@@ -127,12 +127,12 @@ $$ \phi(n) = n - r + 1 $$
 To get p or q from n and phi(n), we can do the following calculation
 
 $$
-\begin{align\*}  
+\begin{align}  
 \phi(n) &= n - p - q + 1 \\  
 pn - p^2 - pq + p - p\phi(n)  &= 0\\ 
 p^2 - pn + p - p\phi(n) - n&=0\\ 
 p^2 - (n+phi(n) -1)p -n &=0\\ 
-\end{align\*}
+\end{align}
 $$
 
 Solving the quadrtic equation give us p, q as roots

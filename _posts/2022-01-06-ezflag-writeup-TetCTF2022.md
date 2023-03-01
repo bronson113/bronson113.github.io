@@ -6,7 +6,6 @@ title: TetCTF 2022 - Ezflag
 
 
 # Challenge Description
-
 ```
 We found an internal storage system exposed to the internet. By ambushing one of the employee, we got some files and the credentials of the system: "admin:admin". Unfortunately, our agent was poisoned and cannot continue hacking. Can you help us?
 
@@ -17,6 +16,7 @@ Service: http://3.22.71.49:9080/
 Author: @nyancat0131
 Solves: 47(part1) / 20(part2) / 591
 ```
+<!--more-->
 
 # Inspection
 

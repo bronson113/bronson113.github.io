@@ -109,6 +109,24 @@ hr {
     padding-right:0;
 }
 
+.post-meta {
+    font-size:12px;
+}
+
+.post-list > li{
+    margin-bottom: 0px;
+}
+
+.post-list > li > h3 {
+    margin-top: 5px;
+    margin-bottom: 20px;
+}
+
+.post-list > hr {
+    margin-top: 50px;
+    margin-bottom: 20px;
+}
+
 /* Mathjax scroll equation */
 mjx-container {
 	overflow-x: auto;

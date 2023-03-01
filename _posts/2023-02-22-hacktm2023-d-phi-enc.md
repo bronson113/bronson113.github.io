@@ -5,7 +5,6 @@ title: HackTM2023 - d-phi-enc
 # HackTM 2023 - d-phi-enc
 
 # Challenge Description
----
 
 ```
 In CTF, there are many people who mistakenly encrypt p, q in RSA.
@@ -13,6 +12,8 @@ But this time...
 
 Solves: 51 solves
 ```
+<!--more-->
+
 
 # Inspection
 ---

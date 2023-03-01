@@ -7,21 +7,17 @@ title: BalsnCTF 2021 - dark knight
 
 # Challenge Description
 
-dark knight
-
+```markdown
 Category: Misc
-
 Author: 424275
-
-Verifier: nawmrofed(1hr)
 
 Solves: 12 / 278
 
 once upon the ime, there was a dark knight who kills every admin he met...
 
-```markdown
 nc darkknight.balsnctf.com 8084
 ```
+<!--more-->
 
 # Inspection
 

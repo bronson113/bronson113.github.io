@@ -1,3 +1,7 @@
+---
+title: HITCONCTF - baba is game
+---
+
 # HITCONCTF - baba is game
 
 
@@ -20,6 +24,7 @@ nc 35.72.58.250 5566
 Author: ddaa
 Solves: 16/286
 ```
+<!--more-->
 
 # Inspection
 

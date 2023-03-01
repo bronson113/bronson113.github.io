@@ -6,30 +6,23 @@ title: ALLES!CTF 2021 - entrAPI
 
 
 # Challenge Description
-
-EntrAPI
-
+```
 Category: Misc
-
 Difficulty: Medium
-
 Author: Flo
-
-First Blood: Black Bauhinia
 
 Solves: 5 / 523
 
 A very simple stegano tool that estimates the entropy of sections of a file by counting unique bytes in a range. Here's a snippet of the Dockerfile to get you started:
 
-```markdown
 COPY main.js index.html flag /
 RUN deno cache main.js
 EXPOSE 1024
 CMD deno run -A main.js
-```
 
 Happy guessing! :^)
-
+```
+<!--more-->
 
 # Inspection
 

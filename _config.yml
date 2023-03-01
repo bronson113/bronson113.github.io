@@ -25,6 +25,9 @@ theme: "minima"
 kramdown:
   syntax_highlighter_opts:
     disable: true
+
+show_excerpts: true
+excerpt_separator: <!--more-->
     
 plugins:
   - jekyll-feed

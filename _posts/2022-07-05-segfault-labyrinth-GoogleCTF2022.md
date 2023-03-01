@@ -5,8 +5,6 @@ title: GoogleCTF 2022 - segfault labyrinth
 # GoogleCTF 2022 - segfault labyrinth
 
 # Challenge Description
----
-
 ```
 Be careful! One wrong turn and the whole thing comes crashing down
 
@@ -14,6 +12,7 @@ nc segfault-labyrinth.2022.ctfcompetition.com 1337
 
 Solves: (189 pt/ 56 solves)
 ```
+<!--more-->
 
 The challenge code can be found here: [https://github.com/google/google-ctf/tree/master/2022/misc-segfault-labyrinth](https://github.com/google/google-ctf/tree/master/2022/misc-segfault-labyrinth)
 

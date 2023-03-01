@@ -1,17 +1,18 @@
+---
+title: HITCONCTF - cclemon
+---
+
 # HITCONCTF - cclemon
 
 
-# Description
-
-
-
+# Challenge Description
 ```
 Speak in 🍋
 
 Author: david942j
 Solved: 24/286
 ```
-
+<!--more-->
 # Inspection
 
 

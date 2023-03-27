@@ -4,7 +4,7 @@ title: b01lersCTF 2023 - padlock
 
 # b01lersCTF 2023 - Padlock
 ## Introduction
-For the past yaer, b01lers has been a huge success in my opion, with our 2023 edition of b01lers CTF, more interesting challeges are solved by the curious individuals. We received a lot of feedback, and most of them are positive! I'm glad for hosting such a wholesome event for everyone :)
+For the past year, b01lers has been a huge success in my opion, with our 2023 edition of b01lers CTF, more interesting challeges are solved by the curious individuals. We received a lot of feedback, and most of them are positive! I'm glad for hosting such a wholesome event for everyone :)
 <!--more-->
 
 This year I created one reverse challenge - padlock. It has been a whlie since I've seen the crazy and fascinating entries to ioccc, the international obfuscated c contest. One entry in particular has been one of my favorate: [endoh2.c](https://www.youtube.com/watch?v=6Ak1DC1uBuc) from ioccc 2018 by Yusuke Endoh. So I decided to create something similar.

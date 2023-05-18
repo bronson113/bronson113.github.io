@@ -3,7 +3,7 @@
 
 Cybersecurity B.S. Student @ Purdue University
 
-President of b01lers @ Purdue.
+Former President of [b01lers](https://b01lers.com) @ Purdue.
 
 Active member of Taiwanese CTF Team TSJ. Part of Balsn.217@TSJ.tw
 

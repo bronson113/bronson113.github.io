@@ -385,8 +385,6 @@ while True:
     if len(sample) == len(set(sample)) and 0 not in sample:
         break
 
-sample = [3, 80, 128, 182]
-
 def getBiasRandomByte():
     return secrets.choice(sample)
 
@@ -422,7 +420,115 @@ for i in range(s):
 {% include widgets/toggle-field.html toggle-name="plcg_chal_py"
     button-text="Show main.py" toggle-text=plcg_chal_py %}
 		
-#TODO
+In this challenge, the key used to encrypt the flag is generated from a custom-made prng generator. Notice that in the last step, if we get some $2^x$ number as the bias random byte, the previous result of g will be shifted upward, leaving very little randomness. For example, if one of the vault in sample is 128, then when that is chosen, the output can only be one in 8 values, either the four values with the 8th bit or without the 8th bit. To actually calculate the probablility of each value as the outcome given `sample`, we can model the transition between two steps using a markov chain. 
+
+Assuming that the markov chain converges to stable sufficently fast, I simply apply the transformation matrix on a uniform distribution to see how skewed the output will be given the sample set. I them connect to the server multiple times until a set skewed enough is retrieved. After that, by bruteforcing the possible keys and attempting to decrypt the text gives us the flag. Using the bruteforce script, I get a challenge sample set \[3, 80, 64, 240\] and able to bruteforce the output.
+		
+{% capture plcg_brute_py %}
+```python
+from Crypto.Util.number import long_to_bytes, bytes_to_long
+from pwn import *
+from sage.all import *
+
+while True:
+    try:
+        p = remote("34.124.157.94", 10531)
+        p.recvline()
+        lucky = list(map(int, p.recvline().split(b" ")))
+        print(lucky)
+        sample = lucky
+        # markov chain
+        valid_output = [[(i*j+k)%256 for j in sample for k in sample] for i in range(256)]
+        transition = matrix(QQ, [[valid_output[i].count(j) for j in range(256)] for i in range(256)]).transpose()/16
+        initial = vector(QQ, [1 for i in range(256)])/256
+        dist = (transition**100) * initial
+
+
+        if min(dist) < 1e-5:
+            break
+        p.close()
+    except Exception:
+        pass
+
+p.recvuntil(b"! ")
+p.sendline(b"10")
+for i in range(10):
+    print(p.recvline())
+
+p.interactive()
+```
+{% endcapture %}
+
+{% include widgets/toggle-field.html toggle-name="plcg_brute_py"
+    button-text="Show brute.py" toggle-text=plcg_brute_py %}
+
+{% capture plcg_solve_py %}
+```python
+#!/usr/bin/python3
+import secrets
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
+from sage.all import *
+import sys
+
+FLAG = b'grey{fake_flag}'
+
+sample = [3, 80, 64, 240]
+
+# markov chain
+valid_output = [[(i*j+k)%256 for j in sample for k in sample] for i in range(256)]
+transition = matrix(QQ, [[valid_output[i].count(j) for j in range(256)] for i in range(256)]).transpose()/16
+initial = vector(QQ, [1 for i in range(256)])/256
+dist = (transition**100) * initial
+
+print(dist)
+valid_output = []
+for i in range(256):
+    count = int(dist[i]*1000)
+    valid_output += [i for j in range(count)]
+print(min(dist))
+
+#[3, 80, 64, 240], taken from brute.sage
+res = """
+Here's your lucky flag: 5558e88faadbe697d50f09ccd98c1043af0bf8a9e20f5de60dcd5dff0b79ebe9c94ff43c90f24ae2bf5ea060ed3d0ad96b3309e2e06e1a20
+Here's your lucky flag: 83080a6358c87c3182893bc174ecc7f53a6cf2c92a4704f5f2392c9868d555588cd7776d29b9493a6b2a2f3a122d43e312f2de2196219200
+Here's your lucky flag: e13d21b2c4f224d8dfc17064e6d4fb0db339aea3ab6b65569c50d130808436dd37440c7061d8bb11cea2ab6f0c1c11701be335d42ac394e9
+Here's your lucky flag: e6828db5d74e2947812ed1c3a39b39db47c887c728ff50fb384662301a129e6437ca89b37e8df45765a1c6c112beda3bf517108d2996a4f8
+Here's your lucky flag: 609f1f2134e9f6f5b294c40cb37eb806ed441fc2d47f209fcc41cf462bfd46d1facf29ccbfcd66d98d959bb812b304f8d90f5fd9d16671be
+Here's your lucky flag: 960bb72692a12a7b52cd9c4e70c99a70204112608e6dd53011be2e6d413a4af991fe30f2829a8a2fae7c2ece1bfd6539db0574bb3d396765
+Here's your lucky flag: 587f8b03596c4ca80ab30fdb8efc6d8c6cff385870f10c398ef0b9c177f0b8b487d6a03bc097bd67aabd6b409240378e7abc8cb875fd7b36
+Here's your lucky flag: 02c7e9edfc0721693c2f60ab2f313506ec3d196a9d0617b77371c7f3d34a2d53fd26096b0f58c82d33f40d16eb95daf3628fe9fb70fd21a7
+Here's your lucky flag: a223335d57dfe47cffdc8b22dbb99919a49b7fdae6f213f21f6f6454c068dbfb6babb82854e054a27ccee256a40ebf487cb2af474af7411f
+Here's your lucky flag: 1edc130b23a9f0d9d042cebc16ec4055e7d25e169e5c0171b5098ec79c4a43c15b91ca6b3fc47e40e6f2cc9d271d3f21a03a9628e50ce34f
+"""
+
+enc_flags = [i.split(": ")[-1] for i in res.split("\n")][1:-1]
+enc_flags = [bytes.fromhex(i) for i in enc_flags]
+print(enc_flags)
+
+counter = 0
+while True:
+    key = bytes([secrets.choice(valid_output) for _ in range(6)])
+    cipher = AES.new(pad(key, 16), AES.MODE_CTR, nonce=b'\xc1\xc7\xcc\xd1D\xfbI\x10')
+    for msg in enc_flags:
+        dec = cipher.decrypt(msg)
+        if b"grey" in dec:
+            print(key)
+            print(msg, dec)
+
+    counter+=1
+    if counter%10000 == 0:
+        print(counter)
+
+#b'\x03\xf0\xf0PP\x03'
+#b'UX\xe8\x8f\xaa\xdb\xe6\x97\xd5\x0f\t\xcc\xd9\x8c\x10C\xaf\x0b\xf8\xa9\xe2\x0f]\xe6\r\xcd]\xff\x0by\xeb\xe9\xc9O\xf4<\x90\xf2J\xe2\xbf^\xa0`\xed=\n\xd9k3\t\xe2\xe0n\x1a '
+#b'grey{G3T_Rand0m_Byte-is_Still_Bi@s_Oof_7nwh8eQfV5e8eZwC}'
+
+```
+{% endcapture %}
+
+{% include widgets/toggle-field.html toggle-name="plcg_solve_py"
+    button-text="Show solve.py" toggle-text=plcg_solve_py %}
 
 ---
 ## Encrypted

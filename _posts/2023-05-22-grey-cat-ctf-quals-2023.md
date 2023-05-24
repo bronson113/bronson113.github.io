@@ -463,6 +463,56 @@ print(f'c2 = {encrypt(FLAG[n//2:], s)}')
 {% include widgets/toggle-field.html toggle-name="encrypted_chal_py"
     button-text="Show main.py" toggle-text=encrypted_chal_py %}
 		
+For this challenge, the encryption is as follow with $p$, $q$, $c_1$, $c_2$ given. 
+
+$$\begin{align}
+c_1 &= p \times m_1 + q \times m_1^{2} + (m_1+p+q) \times k  \\ 
+c_2 &= p \times m_2 + q \times m_2^{2} + (m_2+p+q) \times k  \\  
+\end{align}$$
+
+I start by manipulating the equations around too see how can I simplify it. I know that we're trying to find a small root of the equation (m is significantly smaller than all other parameter) but I'm not sure what I can do. When I try to take mod q on the equation, I found the following relationship. (I'll focus on one copy
+
+$$\begin{align}
+c \equiv  p \times m + (m+p) \times k  &\mod{q}\\  
+c - p \times m \equiv  (m+p) \times k  &\mod{q}\\  
+(c - p \times m) \times (m+p)^{-1} \equiv  k &\mod{q}\\  
+\end{align}$$
+
+By combining the two equations together.
+
+$$\begin{align}
+(c_1 - p \times m_1) \times (m_1+p)^{-1} &\equiv  k \equiv (c_2 - p \times m_2) \times (m_2+p)^{-1}   &\mod{q}\\  
+(c_1 - p \times m_1) \times (m_1+p)^{-1} &\equiv (c_2 - p \times m_2) \times (m_2+p)^{-1}   &\mod{q}\\  
+(c_1 - p \times m_1) \times (m_2+p) &\equiv (c_2 - p \times m_2) \times (m_1+p)  &\mod{q}\\  
+\end{align}$$
+
+$$\begin{align} 
+(c_1 - p \times m_1) \times (m_2+p) - (c_2 - p \times m_2) \times (m_1+p)  &\equiv 0 \mod{q}\\ 
+p\times (c_1-c_2) + (c_1 m_2 - c_2 m_1) - p^{2} m_1 + p^{2} m_2 &\equiv 0 \mod{q}\\ 
+m_1 (c_2+p^{2}) - m_2 (c_1+p^{2}) - p (c_1 - c_2) &\equiv 0 \mod{q}\\ 
+\end{align}$$
+
+After all the manipulation, we can get
+$$m_1 (c_2+p^{2}) - m_2 (c_1+p^{2}) - p (c_1 - c_2) - Kq =  0$$
+, where $K \in \mathbb{Z}$
+
+We can using this relationship to form the following lattice.
+$$\begin{align} 
+m_1 (c_2+p^{2}) - m_2 (c_1+p^{2}) - p (c_1 - c_2) - Kq &=  0\\  
+m_1 &= m_1\\ 
+m_2 &= m_2 \\ 
+1 &= 1\\ 
+\end{align}$$
+
+$$\begin{align} m_1  \begin{bmatrix}  c_2+p^{2} \\  1 \\ 0 \\ 0 \end{bmatrix}
+				 -m_2 \begin{bmatrix} c_1+p^{2} \\  0 \\  -1 \\  0 \\  \end{bmatrix}
+				 -\begin{bmatrix} p(c_1 - c_2) \\ 0 \\ 0 \\ -1 \end{bmatrix}
+				 - K \begin{bmatrix} q \\ 0 \\ 0 \\ 0 \end{bmatrix}
+				 =\begin{bmatrix} 0 \\ m_1 \\ m_2 \\ 1 \end {bmatrix}
+				 \end{align} $$
+
+To make the resulting vector balanced, we apply a weight matrixs so that LLL can better find the target vector we want. See the solve script for more detail.
+	
 {% capture encrypted_solve_sage %}
 ```python
 from Crypto.Util.number import long_to_bytes, bytes_to_long
@@ -478,10 +528,10 @@ c2 = 311188502890981528321610499309745644407926735161995847844848645282794815006
 weights = [1, 1/2^240, 1/2^240, 1]
 Q = diagonal_matrix(weights)
 L = Matrix([
-    [c2+p^2, -1, 0, 0],
-    [c1+p^2, 0, 1, 0],
-    [q, 0, 0, 0],
-    [p*(c1-c2), 0, 0, 1]])
+    [c2+p^2, 1, 0, 0],
+    [c1+p^2, 0, -1, 0],
+    [p*(c1-c2), 0, 0, -1],
+    [q, 0, 0, 0]])
 L = L*Q
 Sol = L.LLL()/Q
 print(Sol)
@@ -490,15 +540,13 @@ for col in Sol:
     if col[0] == 0 and col[3] == 1:
         print(long_to_bytes(int(col[1]))+long_to_bytes(int(col[2])))
 
-
-
 #grey{shortest_crypto_challenge_in_this_ctf_srfrGRUEShP8FKwn}
 ```
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="encrypted_solve_sage"
     button-text="Show solve.sage" toggle-text=encrypted_solve_sage %}
-#TODO
+
 
 ---
 ## QRSA

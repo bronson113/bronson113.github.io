@@ -286,23 +286,6 @@ for words in Subsets(valid_words):
     button-text="Show solve.py" toggle-text=npc_solve_py %}
 `CTF{S3vEn_bR1dg35_0f_K0eN1g5BeRg}`
 ## symatrix
-```text
-The CIA has been tracking a group of hackers who communicate using PNG files embedded with a custom steganography algorithm. 
-An insider spy was able to obtain the encoder, but it is not the original code. 
-You have been tasked with reversing the encoder file and creating a decoder as soon as possible in order to read the most recent PNG file they have sent.
-
-solves: 110
-```
-[encoder.c (From googleCTF github)](https://github.com/google/google-ctf/blob/master/2023/misc-symatrix/challenge/encoder.c)
-
-The challenge comes with a large encoder.c file, this seems intimidating initially. However, reading through the code a little bit, we quickly found out that there are part of the original python file written in the comment. Using a simple parser I extracted the python source from encoder.c file. (My parser actually missed a else: line, and I manuelly added that afterward)
-
-{% include widgets/toggle-field.html toggle-name="symatrix_parse_py" button-text="Show parse_c.py" toggle-text=symatrix_parse_py %}
-{% include widgets/toggle-field.html toggle-name="symatrix_encoder_py" button-text="Show encoder.py" toggle-text=symatrix_encoder_py %}
-
-Base on the encoder.py file, it's clear that the original image is mirrored, and the flag bit and embedded to the right half of the image. The pixel that are modifyed are always increamented by either (0, 1, 0) or (0, 1, 1), with the formar encoding 0 and the latter encoding 1. To decode the flag, we simply go through all the bytes, and extract those that are different left side v.s. right side. We can ignore the random offset since only the pixels that have data encoded are changed.
-{% include widgets/toggle-field.html toggle-name="symatrix_solve_py" button-text="Show solve.py" toggle-text=symatrix_solve_py %}
-`CTF{W4ke_Up_Ne0+Th1s_I5_Th3_Fl4g!}`
 
 {% capture symatrix_parse_py %}
 ```python
@@ -431,6 +414,26 @@ flag = long_to_bytes(int(flag_bits, 2))
 print(flag)
 ```
 {% endcapture %}
+
+```text
+The CIA has been tracking a group of hackers who communicate using PNG files embedded with a custom steganography algorithm. 
+An insider spy was able to obtain the encoder, but it is not the original code. 
+You have been tasked with reversing the encoder file and creating a decoder as soon as possible in order to read the most recent PNG file they have sent.
+
+solves: 110
+```
+[encoder.c (From googleCTF github)](https://github.com/google/google-ctf/blob/master/2023/misc-symatrix/challenge/encoder.c)
+
+The challenge comes with a large encoder.c file, this seems intimidating initially. However, reading through the code a little bit, we quickly found out that there are part of the original python file written in the comment. Using a simple parser I extracted the python source from encoder.c file. (My parser actually missed a else: line, and I manuelly added that afterward)
+
+{% include widgets/toggle-field.html toggle-name="symatrix_parse_py" button-text="Show parse_c.py" toggle-text=symatrix_parse_py %}
+{% include widgets/toggle-field.html toggle-name="symatrix_encoder_py" button-text="Show encoder.py" toggle-text=symatrix_encoder_py %}
+
+Base on the encoder.py file, it's clear that the original image is mirrored, and the flag bit and embedded to the right half of the image. The pixel that are modifyed are always increamented by either (0, 1, 0) or (0, 1, 1), with the formar encoding 0 and the latter encoding 1. To decode the flag, we simply go through all the bytes, and extract those that are different left side v.s. right side. We can ignore the random offset since only the pixels that have data encoded are changed.
+{% include widgets/toggle-field.html toggle-name="symatrix_solve_py" button-text="Show solve.py" toggle-text=symatrix_solve_py %}
+`CTF{W4ke_Up_Ne0+Th1s_I5_Th3_Fl4g!}`
+
+
 
 ---
 # Reverse

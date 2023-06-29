@@ -1337,6 +1337,8 @@ For otherwise I will surely expire
 nc wfw[123].2023.ctfcompetition.com 1337
 solves 294 / 155 / 43
 ```
+
+### overview
 From reversing the challenge, we can quickly identify the behavior. The challenge first output the process map, allowing us to know pie, libc, and stack addresses. It then close stdin/stdout/stderr, and only accept inputs from fd 1337. Lastly, the challenge goes into a while loop, taking an address and a count, then write count number of bytes of flag to the specified address. Note that the flag is written by writting directly to the process memory file, so all addresses are writable, **including the code themselves**. This will be handy for part 3.
 
 The decompiled code from ghidra for part 3, with some modification to reflect each level:
@@ -1398,7 +1400,7 @@ int main(){
 
 {% include widgets/toggle-field.html toggle-name="wfw_chal_c"
     button-text="Show chal.c" toggle-text=wfw_chal_c %}
-
+### Part 1
 For part 1, there is a dprintf function call after the entrence to the while loop, so writing the flag to the string that are printed each loop can leak the flag. 
 
 `CTF{Y0ur_j0urn3y_is_0n1y_ju5t_b39innin9}`
@@ -1441,6 +1443,7 @@ if __name__ == "__main__":
 {% include widgets/toggle-field.html toggle-name="wfw_solve_py"
     button-text="Show solve.py" toggle-text=wfw_solve_py %}
 
+### Part 2
 Part 2 proves to be trickier. In ghidra, the exit call stopped the decompiler from disassembling the code further, therefore missing a dprintf function call after the `exit(0)` call. Instead, I tried to leak the flag using the sscanf function with the string `0x%llx %u`. 
 The sscanf function call will attempt to match the input format string from the input string. In the original challenge, it's trying to match the starting 0x before reading the hex numbers as input. For example, if we overwrite the format string to `Cx%llx %u` and send the input `Cx0 0`, the program will continue normally, but input `Dx0 0` will exit immediately after. Therefore, we can overwrite that string, then attempt to read different strings, leaking the flag byte by byte. See `solve2.py` for implementation details.
 
@@ -1524,15 +1527,239 @@ if __name__ == "__main__":
 {% include widgets/toggle-field.html toggle-name="wfw_solve2_py"
     button-text="Show solve2.py" toggle-text=wfw_solve2_py  %}
 	
-
+### Part 3
 Lastly for part 3, we can't write into the main binary region, including the all the data sections. After looking through the functions in libc that are used, I found that the read function is the most likely function to be hijacked, since the arguments used to call the function is helpful. 
 
-Meanwhile, I also look for some useful instructions we can create using the flag prefix. I notice that 0x43 ('C') is a prefix in x86 assembly, and can be used to nop out instruction with minimal effects on most registers. Another interesting instruction is 0x7b ('{'), which is jnp. This allow use to jmp further down the program. The changes made to the read function is as follow: (Assembly of the unmodified/modified assembly will be added below) 
+Meanwhile, I also look for some useful instructions we can create using the flag prefix. I notice that 0x43 ('C') is a prefix in x86 assembly, and can be used to nop out instruction with minimal effects on most registers. Another interesting instruction is 0x7b ('{'), which is jnp. This allow use to jmp further down the program. The changes made to the read function is as follow: 
 1. Overwrite the second syscall to set rsi from rsp+0x43
 2. Overwrite ja after second syscall to jnp to jump downward
 3. Overwrite jump direction of the last jmp to jump to write function
 4. Overwrite broken instructions with nop so it doesn't segfault
 5. Overwrite the first return in the read function to trigger the full exploit.
+
+see `libc_original.asm` for the original libc function (disassembled from ghidra), and `libc_changed.asm` for the final state after all the writes, along with some comments to how the final payload achieved the target.
+
+{% capture wfw_before_asm %}
+```text
+// ssize_t read(int __fd,void *__buf,size_t __nbytes)
+        00214980 f3 0f 1e fa     ENDBR64
+        00214984 64 8b 04        MOV        EAX,dword ptr FS:[0x18]
+                 25 18 00 
+                 00 00
+        0021498c 85 c0           TEST       EAX,EAX
+        0021498e 75 10           JNZ        LAB_002149a0
+        00214990 0f 05           SYSCALL
+        00214992 48 3d 00        CMP        RAX,-0x1000
+                 f0 ff ff
+        00214998 77 56           JA         LAB_002149f0
+        0021499a c3              RET
+        0021499b 0f              ??         0Fh
+        0021499c 1f              ??         1Fh
+        0021499d 44              ??         44h    D
+        0021499e 00              ??         00h
+        0021499f 00              ??         00h
+                             LAB_002149a0  
+        002149a0 48 83 ec 28     SUB        RSP,0x28
+        002149a4 48 89 54        MOV        qword ptr [RSP + local_10],__nbytes
+                 24 18
+        002149a9 48 89 74        MOV        qword ptr [RSP + local_18],__buf
+                 24 10
+        002149ae 89 7c 24 08     MOV        dword ptr [RSP + local_20],__fd
+        002149b2 e8 b9 c0        CALL       __pthread_enable_asynccancel 
+                 f7 ff
+        002149b7 48 8b 54        MOV        __nbytes,qword ptr [RSP + local_10]
+                 24 18
+        002149bc 48 8b 74        MOV        __buf,qword ptr [RSP + local_18]
+                 24 10
+        002149c1 41 89 c0        MOV        R8D,EAX
+        002149c4 8b 7c 24 08     MOV        __fd,dword ptr [RSP + local_20]
+        002149c8 31 c0           XOR        EAX,EAX
+        002149ca 0f 05           SYSCALL
+        002149cc 48 3d 00        CMP        RAX,-0x1000
+                 f0 ff ff
+        002149d2 77 34           JA         LAB_00214a08
+                             LAB_002149d4
+        002149d4 44 89 c7        MOV        __fd,R8D
+        002149d7 48 89 44        MOV        qword ptr [RSP + local_20],RAX
+                 24 08
+        002149dc e8 ff c0        CALL       __pthread_disable_asynccancel 
+                 f7 ff
+        002149e1 48 8b 44        MOV        RAX,qword ptr [RSP + local_20]
+                 24 08
+        002149e6 48 83 c4 28     ADD        RSP,0x28
+        002149ea c3              RET
+        002149eb 0f              ??         0Fh
+        002149ec 1f              ??         1Fh
+        002149ed 44              ??         44h    D
+        002149ee 00              ??         00h
+        002149ef 00              ??         00h
+                             LAB_002149f0
+        002149f0 48 8b 15        MOV        __nbytes,qword ptr [PTR_00318e10]
+                 19 44 10 00
+        002149f7 f7 d8           NEG        EAX
+        002149f9 64 89 02        MOV        dword ptr FS:[__nbytes],EAX
+        002149fc 48 c7 c0        MOV        RAX,-0x1
+                 ff ff ff ff
+        00214a03 c3              RET
+        00214a04 0f              ??         0Fh
+        00214a05 1f              ??         1Fh
+        00214a06 40              ??         40h    @
+        00214a07 00              ??         00h
+                             LAB_00214a08
+        00214a08 48 8b 15        MOV        __nbytes,qword ptr [PTR_00318e10]
+                 01 44 10 00
+        00214a0f f7 d8           NEG        EAX
+        00214a11 64 89 02        MOV        dword ptr FS:[__nbytes],EAX
+        00214a14 48 c7 c0        MOV        RAX,-0x1
+                 ff ff ff ff
+        00214a1b eb b7           JMP        LAB_002149d4
+        00214a1d 0f              ??         0Fh
+        00214a1e 1f              ??         1Fh
+		
+		
+// ssize_t write(int __fd,void *__buf,size_t __n)
+        00214a20 f3 0f 1e fa     ENDBR64
+        00214a24 64 8b 04        MOV        EAX,dword ptr FS:[0x18]
+                 25 18 00 
+                 00 00
+        00214a2c 85 c0           TEST       EAX,EAX
+        00214a2e 75 10           JNZ        LAB_00214a40
+        00214a30 b8 01 00        MOV        EAX,0x1
+                 00 00
+        00214a35 0f 05           SYSCALL
+        00214a37 48 3d 00        CMP        RAX,-0x1000
+                 f0 ff ff
+        00214a3d 77 51           JA         LAB_00214a90
+        00214a3f c3              RET
+                             LAB_00214a40      
+        00214a40 48 83 ec 28     SUB        RSP,0x28
+        00214a44 48 89 54        MOV        qword ptr [RSP + local_10],__n
+                 24 18
+        00214a49 48 89 74        MOV        qword ptr [RSP + local_18],__buf
+                 24 10
+        00214a4e 89 7c 24 08     MOV        dword ptr [RSP + local_20],__fd
+        00214a52 e8 19 c0        CALL       __pthread_enable_asynccancel  
+                 f7 ff
+        00214a57 48 8b 54        MOV        __n,qword ptr [RSP + local_10]
+                 24 18
+        00214a5c 48 8b 74        MOV        __buf,qword ptr [RSP + local_18]
+                 24 10
+        00214a61 41 89 c0        MOV        R8D,EAX
+        00214a64 8b 7c 24 08     MOV        __fd,dword ptr [RSP + local_20]
+        00214a68 b8 01 00        MOV        EAX,0x1
+                 00 00
+        00214a6d 0f 05           SYSCALL
+        00214a6f 48 3d 00        CMP        RAX,-0x1000
+                 f0 ff ff
+        00214a75 77 31           JA         LAB_00214aa8
+                             LAB_00214a77    
+        00214a77 44 89 c7        MOV        __fd,R8D
+        00214a7a 48 89 44        MOV        qword ptr [RSP + local_20],RAX
+                 24 08
+        00214a7f e8 5c c0        CALL       __pthread_disable_asynccancel 
+                 f7 ff
+        00214a84 48 8b 44        MOV        RAX,qword ptr [RSP + local_20]
+                 24 08
+        00214a89 48 83 c4 28     ADD        RSP,0x28
+        00214a8d c3              RET
+        00214a8e 66              ??         66h    f
+        00214a8f 90              ??         90h
+                             LAB_00214a90       
+        00214a90 48 8b 15        MOV        __n,qword ptr [PTR_00318e10] 
+                 79 43 10 00
+        00214a97 f7 d8           NEG        EAX
+        00214a99 64 89 02        MOV        dword ptr FS:[__n],EAX
+        00214a9c 48 c7 c0        MOV        RAX,-0x1
+                 ff ff ff ff
+        00214aa3 c3              RET
+        00214aa4 0f              ??         0Fh
+        00214aa5 1f              ??         1Fh
+        00214aa6 40              ??         40h    @
+        00214aa7 00              ??         00h
+                             LAB_00214aa8     
+        00214aa8 48 8b 15        MOV        __n,qword ptr [PTR_00318e10] 
+                 61 43 10 00
+        00214aaf f7 d8           NEG        EAX
+        00214ab1 64 89 02        MOV        dword ptr FS:[__n],EAX
+        00214ab4 48 c7 c0        MOV        RAX,-0x1
+                 ff ff ff ff
+        00214abb eb ba           JMP        LAB_00214a77
+        00214abd 0f              ??         0Fh
+        00214abe 1f              ??         1Fh
+        00214abf 00              ??         00h
+```
+{% endcapture %}
+
+{% include widgets/toggle-field.html toggle-name="wfw_before_asm"
+    button-text="Show libc_original.asm" toggle-text=wfw_before_asm  %}
+		
+{% capture wfw_after_asm %}
+```text
+0x7fca9f372980 <read>:     endbr64
+0x7fca9f372984 <read+4>:   mov    eax,DWORD PTR fs:0x18
+0x7fca9f37298c <read+12>:  test   eax,eax
+0x7fca9f37298e <read+14>:  jne    0x7fca9f3729a0 <read+32>
+
+// read payload so that rsp+0x43 = flag location
+0x7fca9f372990 <read+16>:  syscall 
+
+0x7fca9f372992 <read+18>:  cmp    rax,0xfffffffffffff000
+0x7fca9f372998 <read+24>:  ja     0x7fca9f3729f0 <read+112>
+//was ret, overwrite to start payload
+0x7fca9f37299a <read+26>:  rex.XB 
+0x7fca9f37299b <read+27>:  rex.XB //C
+0x7fca9f37299c <read+28>:  rex.XB //C
+0x7fca9f37299d <read+29>:  rex.XB //C
+0x7fca9f37299e <read+30>:  rex.XB //C
+0x7fca9f37299f <read+31>:  rex.XB //C
+0x7fca9f3729a0 <read+32>:  sub    rsp,0x28
+0x7fca9f3729a4 <read+36>:  mov    QWORD PTR [rsp+0x18],rdx
+0x7fca9f3729a9 <read+41>:  mov    QWORD PTR [rsp+0x10],rsi
+0x7fca9f3729ae <read+46>:  mov    DWORD PTR [rsp+0x8],edi
+0x7fca9f3729b2 <read+50>:  rex.XB //C
+0x7fca9f3729b3 <read+51>:  rex.XB //C
+0x7fca9f3729b4 <read+52>:  rex.XB //C
+0x7fca9f3729b5 <read+53>:  rex.XB //C
+0x7fca9f3729b6 <read+54>:  rex.XB //C
+0x7fca9f3729b7 <read+55>:  mov    rdx,QWORD PTR [rsp+0x18]
+
+//C, load flag location into rsi
+0x7fca9f3729bc <read+60>:  mov    rsi,QWORD PTR [rsp+0x43] 
+
+0x7fca9f3729c1 <read+65>:  mov    r8d,eax
+0x7fca9f3729c4 <read+68>:  mov    edi,DWORD PTR [rsp+0x8]
+0x7fca9f3729c8 <read+72>:  xor    eax,eax
+
+// read CT, rax = 2, cmp gives no parity, jmp
+0x7fca9f3729ca <read+74>:  syscall 
+0x7fca9f3729cc <read+76>:  cmp    rax,0x7b465443 //CTF'{'
+0x7fca9f3729d2 <read+82>:  jnp    0x7fca9f372a08 <read+136>
+
+[...]
+0x7fca9f372a08 <read+136>: rex.XB //C
+0x7fca9f372a09 <read+137>: rex.XB //C
+0x7fca9f372a0a <read+138>: rex.XB //C
+0x7fca9f372a0b <read+139>: rex.XB //C
+0x7fca9f372a0c <read+140>: rex.XB //C
+0x7fca9f372a0d <read+141>: rex.XB //C
+0x7fca9f372a0e <read+142>: rex.XB neg r8d
+0x7fca9f372a11 <read+145>: mov    DWORD PTR fs:[rdx],eax
+0x7fca9f372a14 <read+148>: mov    rax,0xffffffffffffffff
+0x7fca9f372a1b <read+155>: jmp    0x7fca9f372a60 <write+64> //C
+[...]
+0x7fca9f372a60 <write+64>: rex.XB //C
+0x7fca9f372a61 <write+65>: mov    r8d,eax
+
+// write 1337, flag, 0x40
+0x7fca9f372a64 <write+68>: mov    edi,DWORD PTR [rsp+0x8]
+0x7fca9f372a68 <write+72>: mov    eax,0x1
+0x7fca9f372a6d <write+77>: syscall 
+[...]
+```
+{% endcapture %}
+
+{% include widgets/toggle-field.html toggle-name="wfw_after_asm"
+    button-text="Show libc_changed.asm" toggle-text=wfw_after_asm  %}
 
 After overwriting the first return, I control the input to the read syscall to manipulate the content in rsp+0x43, and write the flag location there, so the write syscall will leak out the flag. To overcome the issue of no output, I add a sleep between each input to make sure the remove server have enough time to process each input. A better solution will be to pad each input to 0x40 bytes, then no delay will be needed. The solve script is in solve3.py. 
 

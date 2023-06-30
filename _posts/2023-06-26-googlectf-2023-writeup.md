@@ -1050,7 +1050,7 @@ for i in range(len(chars)):
         flag+=chr(chars[i])
 
 flag = "".join([flag[i] for i in ordering])
-print(f"CTF{{{flag}}}")
+print("CTF{"+flag+"}")
 ```
 {% endcapture %}
 
@@ -1736,7 +1736,7 @@ see `libc_original.asm` for the original libc function (disassembled from ghidra
 
 // read CT, rax = 2, cmp gives no parity, jmp
 0x7fca9f3729ca <read+74>:  syscall 
-0x7fca9f3729cc <read+76>:  cmp    rax,0x7b465443 //CTF'{'
+0x7fca9f3729cc <read+76>:  cmp    rax,0x7b465443 //CTF{ {
 0x7fca9f3729d2 <read+82>:  jnp    0x7fca9f372a08 <read+136>
 
 [...]

@@ -12,8 +12,8 @@ Challenge solved after the competition are marked as \[\*\]
 
 ---
 
-# Misc
-## npc
+## Misc
+### npc
 ```text
 A friend handed me this map and told me that it will lead me to the flag. 
 It is confusing me and I don't know how to read it, can you help me out?
@@ -287,7 +287,7 @@ for words in Subsets(valid_words):
 {% include widgets/toggle-field.html toggle-name="npc_solve_py"
     button-text="Show solve.py" toggle-text=npc_solve_py %}
 
-## symatrix
+### symatrix
 
 {% capture symatrix_parse_py %}
 ```python
@@ -441,8 +441,8 @@ Base on the encoder.py file, it's clear that the original image is mirrored, and
 
 
 ---
-# Reverse
-## Turtle
+## Reverse
+### Turtle
 ```text
 Are we not all but turtles drifting in the sea, executing instructions as we stumble upon them?
 
@@ -1058,8 +1058,8 @@ print("CTF{"+flag+"}")
     button-text="Show solve.py" toggle-text=turtle_solve_py%}
 
 ---
-# Crypto
-## Least Common Genominator?
+## Crypto
+### Least Common Genominator?
 ```text
 Someone used this program to send me an encrypted message but I can't read it! It uses something called an LCG, do you know what it is? I dumped the first six consecutive values generated from it but what do I do with it?!
 
@@ -1315,8 +1315,8 @@ print(long_to_bytes(pow(c, d, n)))
     button-text="Show solve.py" toggle-text=lcg_solve_py %}
 
 ---
-# Pwn
-## Write Flag Where [1~3]
+## Pwn
+### Write Flag Where - Overview
 ```text
 Part1:
 This challenge is not a classical pwn
@@ -1342,7 +1342,6 @@ nc wfw[123].2023.ctfcompetition.com 1337
 solves 294 / 155 / 43
 ```
 
-### overview
 From reversing the challenge, we can quickly identify the behavior. The challenge first output the process map, allowing us to know pie, libc, and stack addresses. It then close stdin/stdout/stderr, and only accept inputs from fd 1337. Lastly, the challenge goes into a while loop, taking an address and a count, then write count number of bytes of flag to the specified address. Note that the flag is written by writting directly to the process memory file, so all addresses are writable, **including the code themselves**. This will be handy for part 3.
 
 The decompiled code from ghidra for part 3, with some modification to reflect each level:
@@ -1404,7 +1403,7 @@ int main(){
 
 {% include widgets/toggle-field.html toggle-name="wfw_chal_c"
     button-text="Show chal.c" toggle-text=wfw_chal_c %}
-### Part 1
+### Write Flag Where - Part 1
 For part 1, there is a dprintf function call after the entrence to the while loop, so writing the flag to the string that are printed each loop can leak the flag. 
 
 `CTF{Y0ur_j0urn3y_is_0n1y_ju5t_b39innin9}`
@@ -1447,7 +1446,7 @@ if __name__ == "__main__":
 {% include widgets/toggle-field.html toggle-name="wfw_solve_py"
     button-text="Show solve.py" toggle-text=wfw_solve_py %}
 
-### Part 2
+### Write Flag Where - Part 2
 Part 2 proves to be trickier. In ghidra, the exit call stopped the decompiler from disassembling the code further, therefore missing a dprintf function call after the `exit(0)` call. Instead, I tried to leak the flag using the sscanf function with the string `0x%llx %u`. 
 The sscanf function call will attempt to match the input format string from the input string. In the original challenge, it's trying to match the starting 0x before reading the hex numbers as input. For example, if we overwrite the format string to `Cx%llx %u` and send the input `Cx0 0`, the program will continue normally, but input `Dx0 0` will exit immediately after. Therefore, we can overwrite that string, then attempt to read different strings, leaking the flag byte by byte. See `solve2.py` for implementation details.
 
@@ -1531,7 +1530,7 @@ if __name__ == "__main__":
 {% include widgets/toggle-field.html toggle-name="wfw_solve2_py"
     button-text="Show solve2.py" toggle-text=wfw_solve2_py  %}
 	
-### Part 3
+### Write Flag Where - Part 3
 Lastly for part 3, we can't write into the main binary region, including the all the data sections. After looking through the functions in libc that are used, I found that the read function is the most likely function to be hijacked, since the arguments used to call the function is helpful. 
 
 Meanwhile, I also look for some useful instructions we can create using the flag prefix. I notice that 0x43 ('C') is a prefix in x86 assembly, and can be used to nop out instruction with minimal effects on most registers. Another interesting instruction is 0x7b ('{'), which is jnp. This allow use to jmp further down the program. The changes made to the read function is as follow: 

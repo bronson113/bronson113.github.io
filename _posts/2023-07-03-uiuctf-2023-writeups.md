@@ -93,6 +93,7 @@ This challenge is sponsored by Battelle.
 Author: Minh
 Solves: 36
 ```
+
 ## Pwn
 ### Chainmail
 ```text
@@ -179,14 +180,14 @@ chainmail$ readelf -s ./chal|grep give_flag
 From this we can craft a payload: 64 `a`s to fill the buffer, another 8  `a` as padding for saved rbp, and the print flag location in bytes ("\x16\x12\x40\x00\x00\x00\x00\x00") for the save rip. This will overflow the stack, and after the main function ends, it will call the print flag function for us and this should print the flag, right?
 
 If we send this payload, you'll notice that it didn't work, if we check with gdb you'll notice that it segfault at some location. This is caused by stack alignment. In [x86-64 abi convention](https://learn.microsoft.com/en-us/cpp/build/stack-usage?view=msvc-170#stack-allocation), it requires the caller to maintain a 16 byte stack alignment. Quoted:
-```
-The stack will always be maintained 16-byte aligned, except within the prolog (for example, after the return address is pushed), and except where indicated in Function Types for a certain class of frame functions.
-```
+
+| The stack will always be maintained 16-byte aligned, except within the prolog (for example, after the return address is pushed), and except where indicated in Function Types for a certain class of frame functions.
+
 But when we are calling the give_flag function, the stack actually isn't aligned. This cause some libc function to freak out and break. 
 
-One way to solve this is to omit the first `push rbp` instruction in give_flag. So instead of jumping to 0x401216, we'll jump to 0x40121b. This aligns the stack and the program will no longer segfault. Another way is to insert a ret ROP gadget to move the stack down 0x8 byte, but I'll omit the discussion about this technique here.
+One way to fix this is to jump over the first `push rbp` instruction in give_flag. So instead of jumping to 0x401216, we'll jump to 0x40121b. This aligns the stack and the program will no longer segfault. Another way is to insert a ret ROP gadget to move the stack down 0x8 byte, but I'll omit the discussion about this technique here.
 
-With that, all we need is to send the payload to remote and profile =D
+With that, all we need is to send the payload to remote and profit =D (See blow for the log of sending the payload to remote.)
 
 flag:  `uiuctf{y0ur3_4_B1g_5h0t_n0w!11!!1!!!11!!!!1}`
 

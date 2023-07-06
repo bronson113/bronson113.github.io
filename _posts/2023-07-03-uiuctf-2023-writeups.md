@@ -205,8 +205,11 @@ uiuctf{y0ur3_4_B1g_5h0t_n0w!11!!1!!!11!!!!1}
 ```
 
 ## Web
-### Future Disk [*]
+### Future Disk 1/2 [*]
+#### Overview
+
 ```text
+Ver 1:
 I'm from the year 2123. Here's what I did:
 
 -    Mounted my 10 exabyte flash drive
@@ -218,6 +221,247 @@ I'm from the year 2123. Here's what I did:
 HTTP over Time Travel is a bit slow, so I hope gzipping it made it a little faster to download :)
 https://futuredisk-web.chal.uiuc.tf/haystack.bin.gz
 
+---
+Ver 2:
+Like futuredisk, but a little worse.
+
+https://futuredisk2-web.chal.uiuc.tf/haystack2.bin.gz
+---
+
 Author: kuilin
-Solves: 22
+Solves: 22 (Ver 1)/ 8 (Ver 2)
 ```
+**Disclaimer**: I only solve this challenge (both version) after the competition. In the final solve, I already know that block alignment can be used for binary serach, and I know the block size pattern for part 2. 
+
+In this challenge, we see that the flag is placed in a gigantic file, compressed, then placed on a file server for us to download. But how are we suppose to download this file? Even if we have the storage, there's no way we can recieve the file through the network. Clearly with this large of the file, we must have some way to efficiently search through it or to get a index of the flag by inspecting a known part of the file. 
+
+#### Observation 
+But first, we need to know what primitives we have. Let's start with a basic recon. I start with curl with `-v` flag to get more information. 
+```
+futuredisk$ curl -v -N https://futuredisk-web.chal.uiuc.tf/haystack.bin.gz --output - > /dev/null
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying 34.72.163.149:443...
+[...]
+> GET /haystack.bin.gz HTTP/2
+> Host: futuredisk-web.chal.uiuc.tf
+> user-agent: curl/7.68.0
+> accept: */*
+>
+[...]
+< HTTP/2 200
+< accept-ranges: bytes
+< content-type: application/octet-stream
+< date: Thu, 06 Jul 2023 02:26:50 GMT
+< etag: "1209f04b4-7fffffffffffffff"
+< last-modified: Sat, 12 Jun 2123 16:07:16 GMT
+< server: nginx/1.23.1
+< content-length: 9223372036854775807
+<
+{ [5 bytes data]
+  0 8191P    0  3813    0     0   2662      0 40102175  0:00:01 40102175  2664^C
+```
+From the trace, we can see that the full file will be 9223372036854775807 bytes, so yeah it's impossible to get the full thing.
+
+After some digging, I found the `--continued-at` argument to curl, which allow a user to start downloading from some offset. Looking at the log again, I notice that this is made possible by sending the `range` header. For example, if we include `range: bytes=1-10`, the server will only send bytes from byte 1 to 10. This basically allow the sender to decide what range of bytes the user wants to download from. More information about the range header can be found [here](https://http.dev/range)
+
+To utilized this, I wrote a helper function using python's requests library. This will be used later.
+```
+# helper function to get bytes of certain range
+# using the range header
+def get_range(st, ed):
+    headers = {'range':f"bytes={st}-{ed}"}
+    print(headers)
+    res = requests.get(url, headers=headers)
+    return res._content # return raw bytes
+```
+#### File Strucutre
+Now let's inspect the actual file itself, well only part of it of course. We know that the file is compressed using gzip, maybe we can start by looking into the format for that. While searching up the header format, I found [this website](https://commandlinefanatic.com/cgi-bin/showarticle.cgi?article=art053) that goes into great detail in disecting a gzip file. This website is extremely helpful for me in understanding the file structure. We know that after the file header, the data is split into blocks, with each block having its own header and compression methods. I also found [this blog](https://pyokagan.name/blog/2019-10-18-zlibinflate/) that implements the deflate method in python so I can play around with it a little bit.
+
+After augmenting the inflate code, I get to look at the huffman tables / block sizes / inflated sizes and some other information related to each block. Using the start of each file, we can observe the block sizes of each block. 
+```
+futuredisk$ decode.py haystack1.gz
+block 1: 193 bits
+block 2: 65635 bits
+block 3: 65634 bits
+block 4: 65634 bits
+block 5: 65634 bits
+[...]
+futuredisk$ decode.py haystack2.gz
+block 1: 193 bits
+block 2: 65635 bits
+block 3: 106 bits
+block 4: 108 bits
+block 5: 110 bits
+block 6: 112 bits
+block 7: 114 bits
+block 8: 116 bits
+[...]
+```
+
+#### Binary Search
+We can imaging the situation a little bit, lets say the flag is in the 10th block in a 20 block file. Since the file is mostly zero, we can assume the first 9 blocks will follow a pretty regular sequence. then there will be one block of a irregular size to store the flag, and the rest of the block back to the regular format. This means that if we can find the block header at the location we expects it, we haven't reach the block containing the flag. Conversely, if we can't find the block header, we have passed the flag block. The only challenge now is to calculate where the header bytes are.
+#### Index calculation
+For version 1, it's simple as all blocks have the same size, so it's a simple multiplication. For version 2, I'll describe how I would have discover the pattern myself.
+
+Firstly from the starting block, we know that after the first two block, it's a steadily increasing sequence from 106 bit, I'll just assume that this is the correct format and run the binary search with this formula. When it gets to the "flag" block, we can print out the following few blocks, and observe the pattern from there. For example, after the first block, the decrypted block size is as follow.
+```
+futuredisk$ solve.py 
+[...]
+32765
+Found!!!
+block 32765: 65634 bits
+block 32766: 108 bits
+block 32767: 110 bits
+block 32768: 112 bits
+```
+And slowly the block size format can be discovered. The bit length format is as follow, where each number is a block.
+```
+# 106 108 110 ... 65634
+#     108 110 ... 65634
+#         110 ... 65634
+#             ... 65634
+#                 65634
+# 106 108 110 ... 65634
+#     108 110 ... 65634
+#         110 ... 65634
+#             ... 65634
+#                 65634
+# ... repeat
+# 106 108 110 ... 65634
+#     108 110 ... 65634
+#         110 ... 65634
+#             ... 65634
+#                 65634
+```
+Given this format, it's simple to come up with ways to calculate the block location with some math, I'll omit the details here, but the detail can be found in the solve script.
+
+After that, combined with our primitive, we can query for the flag location using binary search, and get the flag in the end.
+
+
+Version1: `uiuctf{binary search means searching a binary stream, right :D}`
+
+Version2: `uiuctf{i sincerely hope that was not too contrived, deflate streams are cool}`
+
+
+{% capture future_disk_solve %}
+```py
+# deflate taken from https://pyokagan.name/blog/2019-10-18-zlibinflate/
+# modified to print out bit count of each block
+import deflate
+import requests
+import math
+
+VER = 2
+if VER == 1:
+    f = open("haystack1.gz", "rb").read()
+else:
+    f = open("haystack2.gz", "rb").read()
+
+## check bit count of starting blocks
+#content = deflate.BitReader(f)
+#content.read_bytes(10)
+#s = deflate.inflate(content, 10)
+
+if VER == 1:
+    url = "https://futuredisk-web.chal.uiuc.tf/haystack.bin.gz"
+else:
+    url = "https://futuredisk2-web.chal.uiuc.tf/haystack2.bin.gz"
+
+# helper function to get bytes of certain range
+# using the range header
+def get_range(st, ed):
+    headers = {'range':f"bytes={st}-{ed}"}
+    print(headers)
+    res = requests.get(url, headers=headers)
+    return res._content
+
+# count bits / bytes up to the given block index
+def sum_block_size(idx):
+    if VER == 1:
+        # Fix block bits size
+        bitcount = 87 + 65634*(idx-1)
+
+    else:
+        bitcount = 87 + 65634
+        # bit len format:
+        # 106 108 110 ... 65634
+        #     108 110 ... 65634
+        #         110 ...
+        # =
+        # 1 2 3 ... 32765
+        #   2 3 ... 32765
+        #     3 ... 32765
+        # * 2 + 105 * n
+        m = 32765
+        actual_idx = idx-2
+        big_cycle = actual_idx // (m * (m+1)//2)
+
+        # iter count
+        # 32765 + 32764 + ...
+        # (32765 + (32766-x))*x//2 > actual_idx > (32765 + (32766 - (x-1)))*(x-1)//2
+        big_cycle_bits = (m * (m+1) * (2*m+1))//6
+        big_cycle_bits *= 2
+        big_cycle_bits += 104 * (m * (m+1)//2)
+        bitcount += big_cycle * big_cycle_bits
+
+        remain = actual_idx % (m * (m+1)//2)
+        cycle = 0
+        total = 0
+        while total + m - cycle < remain:
+            st = 106 + cycle * 2
+            ct = m - cycle
+            ed = st + ct * 2  - 2
+            total += ct
+            bitcount += (st + ed) * (ct) // 2
+            cycle += 1
+
+        remain -= total
+        st = 106 + cycle * 2
+        ed = 106 + cycle * 2 + remain * 2 - 2
+        bitcount += (st + ed) * (remain) // 2
+    return bitcount, bitcount//8
+
+## Verify the block size get is correct
+# for i in range(32760, 32780):
+#     print(i, sum_block_size(i), get_range(sum_block_size(i)[1], sum_block_size(i)[1]+10))
+
+## Binary Search for flag using alignment
+# VER 1
+# block = 362917535825829
+# VER 2
+# block = 1142943246527020
+st = 0
+ed = 9223372036854775807
+while st<ed:
+    mid = (st+ed)//2
+    st_idx = sum_block_size(mid)[1]
+    if st_idx > 9223372036854775807:
+        ed = mid-1
+        continue
+    res = get_range(st_idx, st_idx+10)
+    print(mid, res.hex())
+    if len(set(res)) == 1:
+        ed = mid
+    else:
+        st = mid+1
+
+# decode flag
+print(st, ed)
+flag_loc = st-1
+flag_block = get_range(sum_block_size(flag_loc)[1], sum_block_size(ed+1)[1])
+print(len(flag_block))
+offset = (sum_block_size(flag_loc)[0]%8)
+print(offset)
+flag = deflate.BitReader(flag_block)
+flag.read_bits(offset)
+flag_inflated = deflate.inflate(flag, 1)
+print(flag_inflated)
+
+# VER 1
+#uiuctf{binary search means searching a binary stream, right :D}
+# VER 2
+#uiuctf{i sincerely hope that was not too contrived, deflate streams are cool}
+```
+{% endcapture %}
+{% include widgets/toggle-field.html toggle-name="future_disk_solve" button-text="Show solve.py" toggle-text=future_disk_solve %}

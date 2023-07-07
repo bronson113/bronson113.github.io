@@ -94,6 +94,505 @@ Author: Minh
 Solves: 36
 ```
 
+We are given a binary. After running it, it seems like the program is a simple calculator. 
+```
+fast_calc$ ./calc
+Welcome to the fastest, most optimized calculator ever!
+Example usage:
+  Add:       1 + 2
+  Subtract:  10 - 24
+  Multiply:  34 * 8
+  Divide:    20 / 3
+  Modulo:    60 % 9
+  Exponent:  2 ^ 12
+
+If you enter the correct secret operation, I might decrypt the flag for you! ^-^
+
+Enter your operation: 1 + 1
+Result: 2.000000
+Enter your operation: 2 * 2
+Result: 4.000000
+Enter your operation:
+```
+
+Obviously we will not be able to guess the correctly operation, so let's start decompiling the program. After looking at the code in ghidra, we get the rough pseudo code of the program as follow.
+```
+def main():
+	flag = some_initial_flag_state
+	sscanf("%lf %c %lf", lop, op, rop)
+	res = calculate(op, lop, rop)
+	if res == 8573.8567:
+		for i in range(368):
+			if guantlet(calculate(equations[i])):
+				flip_bit(i, flag)
+		print(flag)
+```
+
+Now we know the secret value, we can create an equation that result in that, like 8573.8567 + 0, and that should give us the flag, right? Running the program with that input gives us the following output.
+```
+fast_calc$ ./calc
+Welcome to the fastest, most optimized calculator ever!
+Example usage:
+  Add:       1 + 2
+  Subtract:  10 - 24
+  Multiply:  34 * 8
+  Divide:    20 / 3
+  Modulo:    60 % 9
+  Exponent:  2 ^ 12
+
+If you enter the correct secret operation, I might decrypt the flag for you! ^-^
+
+Enter your operation: 8573.8567 + 0
+Result: 8573.856700
+
+Correct! Attempting to decrypt the flag...
+I calculated 368 operations, tested each result in the gauntlet, and flipped 119 bits in the encrypted flag!
+Here is your decrypted flag:
+
+uiuctf{This is a fake flag. You are too fast!}
+
+Enter your operation:
+```
+Clearly there's something wrong, but where? If we look into the guantlet function, this is the pseudo code:
+```
+char gauntlet(int param_1)
+
+{
+  char cVar1;
+  
+  cVar1 = isNegative(param_1);
+  if (((cVar1 == '\0') && (cVar1 = isNotNumber(param_1), cVar1 == '\0')) &&
+     (cVar1 = isInfinity(param_1), cVar1 == '\0')) {
+    return 0;
+  }
+  return 1;
+}
+```
+But if we look into the isNotNumber function and the isInfinity function, they are both empty:
+```
+char isNotNumber(void)
+{
+  return 0;
+}
+char isInfinity(void)
+{
+  return 0;
+}
+```
+Seems like when the program is compiled, these checks are optimized out. What we can do now is to re-implement those checks outselves, or extract the equations and do the comprisons with the correct checks. I choose to hook gdb to printout the result of each equations and extract the bits from there. The initial state of the flag can be gathered statically from ghidra.
+
+Using gdb, we can set break points at the start of the guantlet function, and gather the result of each calculation. I print out the rax register, which is indirectly used to pass the argument into the guantlet function (The series of mov rax, xmm0). Since I use gef-gdb, I disabled the context output so the display function shows up.  With those set up, I just let the program run, enter the equation `8573.8567 + 0`, and press continue a bunch of time to gather the output from gdb. I then do some string processing to determine if the result fits the gauntlet function criteria, and reconstruct the key bit strings from there. 
+
+The detail of the processing steps can be found in my solve script. I trime down the output from gdb and only leave the lines that displays the desire outputs. Note that -0.0 should be considered negative, which is likely coming from rounding a really small negative number. In my code, I simply match if there is a negative sign in the string or if `nan` is in the string, I didn't check for `inf` as it doesn't exist in the result. 
+
+During the after competition Q&A section, we learn that this discrepancy is caused by the `-ffast-math` optimization flag. According to the [manual](https://gcc.gnu.org/wiki/FloatingPointMath), this flag enables multiple optimization, which assumes that there are no negative zero, no infinite number, and no "Not a number". This cause the function in this challenge to be optimized out and return the wrong results, like always return 0 for the `isInfinite` and `isNotNumber` functions. 
+
+Anyway, after recovering the results of the calculations, we can recover the correct flag: `uiuctf{n0t_So_f45t_w1th_0bscur3_b1ts_of_MaThs}`
+
+{% capture fast_math_solve %}
+```python
+from Crypto.Util.number import long_to_bytes
+from pwn import xor, u64
+from collections import namedtuple
+import struct
+flag_init = [0x10eeb90001e1c34b, 0xcb382178a4f04bee, 0xe84683ce6b212aea, 0xa0f5cf092c8ca741, 0x20a92860082772a1, 0x0000e9a435abb366]
+
+## In gdb, run the following
+## I have gef enable, so to disable the context command on break point
+# gef config context.enable 0
+## display the argument send into gauntlet function
+# display/f $rax
+## break at the function entry 
+# break *gauntlet
+## run and record the output at each break point
+# continue
+
+gauntlet_result_str = """1: /f $rax = 314.23572239497753
+1: /f $rax = 343.1722504437929
+1: /f $rax = -101.85126480640992
+1: /f $rax = -0.14835009306536753
+1: /f $rax = -70.145728960527265
+1: /f $rax = -2.6849183740546723
+1: /f $rax = -2.3380621927091738
+1: /f $rax = 86.218782945280964
+1: /f $rax = -3.3639097471103775e+173
+1: /f $rax = 46094.822986351515
+1: /f $rax = -67.229647073100352
+1: /f $rax = 438.01221554209553
+1: /f $rax = -62.22407895907827
+1: /f $rax = 0.5686960704974473
+1: /f $rax = -11.235858046371675
+1: /f $rax = 45.736994758008109
+1: /f $rax = -18.801101024741456
+1: /f $rax = 411.84732421177659
+1: /f $rax = 45.272562437363035
+1: /f $rax = -0.37696866777117749
+1: /f $rax = 88.471730127468447
+1: /f $rax = -115.84593208858394
+1: /f $rax = 4.7067980704139161e+81
+1: /f $rax = 0.54632989995632775
+1: /f $rax = 365.5900085787963
+1: /f $rax = -12224407890038.037
+1: /f $rax = -900.03969886574691
+1: /f $rax = 192.03613945346399
+1: /f $rax = 22794.907192724011
+1: /f $rax = 5.5838341534360488e+102
+1: /f $rax = -3.2637463171100762
+1: /f $rax = 159.0671967048533
+1: /f $rax = 30.011102835658335
+1: /f $rax = -0.77702398729932365
+1: /f $rax = -1.4816482051550224
+1: /f $rax = -1.0767063255033242e+68
+1: /f $rax = 129.41389307826773
+1: /f $rax = -104.65344600547064
+1: /f $rax = 257.8983468906606
+1: /f $rax = 576.9359463423001
+1: /f $rax = -0.47174390929966187
+1: /f $rax = -4.1909544608317306
+1: /f $rax = 0.23304225970708495
+1: /f $rax = -84.792660796004725
+1: /f $rax = -70341.035023618824
+1: /f $rax = -8.3558344696096316e+64
+1: /f $rax = -112.71915174806799
+1: /f $rax = -0.77501348533601244
+1: /f $rax = -0.79477368623462019
+1: /f $rax = 138.55118925698957
+1: /f $rax = 62867.158634785257
+1: /f $rax = -3.000328242329492e+180
+1: /f $rax = 2.1776919356209225e+151
+1: /f $rax = -2.1194889785952991
+1: /f $rax = 826.09998445102667
+1: /f $rax = -360.78132147755349
+1: /f $rax = 0.74474414688805379
+1: /f $rax = -21.526343208515129
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -0
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -26.071269727239439
+1: /f $rax = -0
+1: /f $rax = 1.1862373081337182e+117
+1: /f $rax = -195.86680296791417
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = 51014.532345230917
+1: /f $rax = -0
+1: /f $rax = -0
+1: /f $rax = -15.569984026884583
+1: /f $rax = -54.755056250318489
+1: /f $rax = 14200.373689706015
+1: /f $rax = 218.53775827884192
+1: /f $rax = 7.7720611029683001e+113
+1: /f $rax = -54359.046985524998
+1: /f $rax = -0
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -6.370935462591425e+103
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -493.83639903330982
+1: /f $rax = 91.739040381445648
+1: /f $rax = -0
+1: /f $rax = 5.5930414556039505
+1: /f $rax = -0
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -648.15538239805801
+1: /f $rax = -1.7360428852698293
+1: /f $rax = -88380681806354.375
+1: /f $rax = -0
+1: /f $rax = -0
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = 149.63032247415293
+1: /f $rax = -1.4381306131731484e+175
+1: /f $rax = -0
+1: /f $rax = -0
+1: /f $rax = 17796.731831557954
+1: /f $rax = 472.60782602556361
+1: /f $rax = 8.4333081523481042
+1: /f $rax = -69.343045576994086
+1: /f $rax = 166.97777525280043
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -0
+1: /f $rax = -0.78663690221494187
+1: /f $rax = 124.48452366441916
+1: /f $rax = -24.166235583316563
+1: /f $rax = -0
+1: /f $rax = -91893.006289350305
+1: /f $rax = -0
+1: /f $rax = -0
+1: /f $rax = -77.947739723395614
+1: /f $rax = 351.31148102293406
+1: /f $rax = 677.84610642219423
+1: /f $rax = -0
+1: /f $rax = 61017.564352902024
+1: /f $rax = -730.71847028262323
+1: /f $rax = -2.9862791904668937e+57
+1: /f $rax = -0
+1: /f $rax = -0
+1: /f $rax = 0.46137120873229431
+1: /f $rax = -1.5805958630033241
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -2047.9485377909623
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -279.92789568076961
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -3.5566717877102974e+160
+1: /f $rax = -0
+1: /f $rax = -35011.007801930165
+1: /f $rax = -70.73409314339824
+1: /f $rax = 0.13748648705254249
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -127.63031163891606
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -8.3377831242250409
+1: /f $rax = -0
+1: /f $rax = 73914.284889780072
+1: /f $rax = -1.1205570846974704e+30
+1: /f $rax = 868.91249403708673
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -3781.1025679452832
+1: /f $rax = -398.23202773538833
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = 6.150332565634857e+123
+1: /f $rax = 106.92708315198797
+1: /f $rax = -126958.01118794817
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -0
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -0
+1: /f $rax = 2.3235637995996195
+1: /f $rax = 1172.4570923687561
+1: /f $rax = 282667694185.37067
+1: /f $rax = 419.22101622342973
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = 1.5015581523042944e+106
+1: /f $rax = 14.116915444637357
+1: /f $rax = -670.80920696640771
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -40.175576810129257
+1: /f $rax = -0
+1: /f $rax = -535.08846436597457
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -24.996900828879973
+1: /f $rax = -0.4482337253576606
+1: /f $rax = -22075.351523103447
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -66629.115626130355
+1: /f $rax = -0
+1: /f $rax = 4.7736504866351757
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -750.41785743580328
+1: /f $rax = -397.49355092611438
+1: /f $rax = 421.45554904220558
+1: /f $rax = 272.44106051590188
+1: /f $rax = -39853.033198178338
+1: /f $rax = 163773.34383559634
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -0
+1: /f $rax = -0
+1: /f $rax = 909.06916666172924
+1: /f $rax = -17044.293607727042
+1: /f $rax = 0.65923135526929078
+1: /f $rax = -0
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = 281.64059966529658
+1: /f $rax = -2.8299636815986545e+135
+1: /f $rax = -0
+1: /f $rax = -0
+1: /f $rax = 362.73719659653017
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -1.3883485850670447
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = 93.153374984795107
+1: /f $rax = 13.013689110180962
+1: /f $rax = 1.9706463137115084
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -332.70825023576583
+1: /f $rax = -0.14833759536673966
+1: /f $rax = 9.9017259669548139
+1: /f $rax = 31842.681577482257
+1: /f $rax = 3.1202574779650742
+1: /f $rax = -0
+1: /f $rax = 16382.118960546628
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -6.7132868546727442e+184
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -174.78551375100216
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -0
+1: /f $rax = -0
+1: /f $rax = -1987.883710049279
+1: /f $rax = -0
+1: /f $rax = 318.67029200471404
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = 65.16561987924581
+1: /f $rax = 20.353222265520685
+1: /f $rax = -0.73389327660335457
+1: /f $rax = -266.24812381690595
+1: /f $rax = -0
+1: /f $rax = -0
+1: /f $rax = 112.28331135754138
+1: /f $rax = -775.0884636297726
+1: /f $rax = -0
+1: /f $rax = -123.49647710482895
+1: /f $rax = -0
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = 68.32948123433016
+1: /f $rax = 42216.592524590371
+1: /f $rax = -130.97917757842748
+1: /f $rax = 29432.765402793259
+1: /f $rax = -878.51164428076936
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -0
+1: /f $rax = -0
+1: /f $rax = 306.40280919331701
+1: /f $rax = -0
+1: /f $rax = -0.20570015125935212
+1: /f $rax = -0
+1: /f $rax = 47.573162560923492
+1: /f $rax = 23.030280017535915
+1: /f $rax = 378.44803504327092
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -0
+1: /f $rax = 1.1328069324948051e+46
+1: /f $rax = -210.34934864154206
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -0
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -0
+1: /f $rax = -0
+1: /f $rax = -0
+1: /f $rax = -1.1007026146671162
+1: /f $rax = -26.400390640113017
+1: /f $rax = 397.48613844398091
+1: /f $rax = 38525.844533000112
+1: /f $rax = 30.648157313300999
+1: /f $rax = 6.1955288111496536
+1: /f $rax = -0
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = 0.70927007491958105
+1: /f $rax = -0
+1: /f $rax = 1.8864493518170104e+26
+1: /f $rax = 0.16905148155093813
+1: /f $rax = 1.3585953817759831e+92
+1: /f $rax = 181.19460341004981
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = 225.29942051219257
+1: /f $rax = -185.39637228963687
+1: /f $rax = 358.19308718059125
+1: /f $rax = -0
+1: /f $rax = 95.617280730657967
+1: /f $rax = 64822.754928640163
+1: /f $rax = -8.3805738251753192e+131
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = 280.87137523260935
+1: /f $rax = -0
+1: /f $rax = -1.2639319359462708e+108
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -1.3969847218364998e+131
+1: /f $rax = 0.14077936300692293
+1: /f $rax = -0
+1: /f $rax = -0
+1: /f $rax = 5.319300019172033
+1: /f $rax = 527.08403233634419
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -32.299552813442517
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -2.429700289221689e+81
+1: /f $rax = -0
+1: /f $rax = -0
+1: /f $rax = 1.2655924566762723e+32
+1: /f $rax = -0.92793953369268045
+1: /f $rax = 219499.6079292119
+1: /f $rax = 2.0876504455883737e+58
+1: /f $rax = 1.6366868264419469e+113
+1: /f $rax = -1.0405670972109875
+1: /f $rax = -1.36021695876653e+144
+1: /f $rax = -79.584542222673861
+1: /f $rax = -146954.02785373406
+1: /f $rax = -4.6878849674481635e+105
+1: /f $rax = 5.2042273135353394
+1: /f $rax = 68474.465419736342
+1: /f $rax = -0
+1: /f $rax = -263.87225021489024
+1: /f $rax = -137.14753940351306
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = 65.584892774741547
+1: /f $rax = -0
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -0
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -0
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = 1.8375862375292325e+61
+1: /f $rax = 64.923792584856926
+1: /f $rax = -0
+1: /f $rax = 409.39159782790705
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = 163.56416201962367
+1: /f $rax = -0
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -7.6372145447543532e+61
+1: /f $rax = -0.61724198201350899
+1: /f $rax = 25447.55907409166
+1: /f $rax = -41.845610177283163
+1: /f $rax = 2.4896131626248281
+1: /f $rax = 1.0207860141139902
+1: /f $rax = -33941.712961799269
+1: /f $rax = 7.8614623295186448
+1: /f $rax = -3.8777423969773022
+1: /f $rax = -0.68108037017455914
+1: /f $rax = -0
+1: /f $rax = -685.17496006588283
+1: /f $rax = -8.0149697814365481
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -0
+1: /f $rax = -0
+1: /f $rax = 285.92254208579675
+1: /f $rax = -287.40609702408972
+1: /f $rax = 468.70035658374701
+1: /f $rax = -nan(0x8000000000000)
+1: /f $rax = -0
+1: /f $rax = -0
+1: /f $rax = 58.03201117994729
+1: /f $rax = -4.0117609975907898e+151
+1: /f $rax = -7.0854219349746412e+33
+1: /f $rax = -0
+1: /f $rax = 1.3966977676222205
+1: /f $rax = -0
+1: /f $rax = 93.01034943574615
+1: /f $rax = -89.204424936891314
+1: /f $rax = -0
+1: /f $rax = -126.55669891797004
+1: /f $rax = -613.57861842951388
+1: /f $rax = 161.36487031616679
+1: /f $rax = 178.73853880744343
+1: /f $rax = -85.575377705299331
+1: /f $rax = 8.5465193972006208e+26
+1: /f $rax = -9.0363744286576492e+87
+1: /f $rax = 8.2600129371691562
+1: /f $rax = 0.0021326131099172149"""
+
+
+
+
+flag_init_bytes = list(map(long_to_bytes, flag_init))
+flag_init_bytes = b"".join(i[::-1] for i in flag_init_bytes) #fix endianness
+
+gauntlet_result = [i.split(" = ")[-1] for i in gauntlet_result_str.split("\n")]
+gauntlet_result_bits = ["1" if (i[0] == "-" or ("nan" in i)) else "0" for i in gauntlet_result]
+gauntlet_result_bits = "".join(gauntlet_result_bits)
+
+key = long_to_bytes(int(gauntlet_result_bits, 2))
+print(xor(flag_init_bytes, key))
+#uiuctf{n0t_So_f45t_w1th_0bscur3_b1ts_of_MaThs}
+```
+{% endcapture %}
+{% include widgets/toggle-field.html toggle-name="fast_math_solve" button-text="Show solve.py" toggle-text=fast_math_solve %}
+
 ## Pwn
 ### Chainmail
 ```text

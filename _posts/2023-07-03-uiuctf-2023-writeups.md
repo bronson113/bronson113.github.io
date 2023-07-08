@@ -106,6 +106,7 @@ What is a Pohlig-Hellman Attack though? According to [Wikipedia](https://en.wiki
 	x &\equiv x_0  \mod{\frac{p}{t}} \qquad \because t \vert p \ ^{*1}  \\   
 	x &\equiv x_0  \mod{e} \\ 
 	\end{align}$$
+	
 	\*1: Note that I'm not sure if this holds, but it make sense =D
 
 5. After we gather all the reminder from the various factors, we can use CRT to reconstruct $x$ from all the $x_0$

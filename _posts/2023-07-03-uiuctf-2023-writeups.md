@@ -108,8 +108,9 @@ x &\equiv x_0  \mod{e} \\
 \*1: Note that I'm not sure if this holds, but it make sense =D
 5. After we gather all the reminder from the various factors, we can use CRT to reconstruct $x$ from all the $x_0$
 
+When I'm initially learning a bout pohlig-hellman attack, [this blog](https://l0z1k.com/pohlig_hellman_attack) that applies this attack on elliptic curve cryptography helped me a lot. I get to understand how the attack works more intuiatively. If you want more detailed description on the attack, this will be a great resource along with the wiki page. 
 #### Cado-nfs
-Even though we can split the problem down into small chunks, we still need to deal with each smaller pieces. All the factors except the last one is relatively easy to tackle, as the built in sage discrete log function solves them quite easily. The last one is still problematic though. From some previous experience (i.e. GoogleCTF2023 - cursved), I know that cado-nfs is a good tool for solving dlp of size less than around 250 bits. I need to search around a little bit and found [this working repo](https://github.com/cado-nfs/cado-nfs). Just follow the steps to install it. 
+Even though we can split the problem down into small chunks, we still need to deal with each smaller pieces. All the factors except the last one is relatively easy to tackle, as the built in sage discrete log function solves them quite easily. The last one is still problematic though. From some previous experience (i.e. GoogleCTF2023 - cursved), I know that cado-nfs is a good tool for solving dlp of size less than around 250 bits. I need to search around a little bit and found [the official cado-nfs repo](https://github.com/cado-nfs/cado-nfs). Just follow the steps to install it. 
 
 Reading the user manual, we learn that the --dlp option allows us to find the discrete log of a number, but to a "random" base $b$, so $b^{x} \equiv a \mod b$. That's totally fine, as we can do a change of base algorithm to switch to any log base. 
 $log_a(b) = log_c(b) / log_c(a)$

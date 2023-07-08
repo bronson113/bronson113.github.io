@@ -57,6 +57,7 @@ Solves: 140
 ```
 
 ### Crack The Safe
+#### Overview
 ```text
 I found this safe, but something about it seems a bit off - can you crack it?
 
@@ -64,6 +65,146 @@ Author: Anakin
 Solves: 62
 ```
 
+```python
+from Crypto.Cipher import AES
+from secret import key, FLAG
+
+p = 4170887899225220949299992515778389605737976266979828742347
+ct = bytes.fromhex("ae7d2e82a804a5a2dcbc5d5622c94b3e14f8c5a752a51326e42cda6d8efa4696")
+
+def crack_safe(key):
+    return pow(7, int.from_bytes(key, 'big'), p) == 0x49545b7d5204bd639e299bc265ca987fb4b949c461b33759
+
+assert crack_safe(key) and AES.new(key,AES.MODE_ECB).decrypt(ct) == FLAG
+```
+This is a really short challenge and not a lot of code to read through. Essentially we need to solve the discrete log problem to find the key such that 
+$$7^{key} \equiv \mathtt{0x49545b7d5204bd639e299bc265ca987fb4b949c461b33759} \mod{p}$$
+
+We can first verify that p is a prime number. Typically, DLP under finite field is consider a hard problem. However, the difficulty of the DLP problem is bounded by the largest prime factor of the order of the finite field. Let's check the factors of the order, which is p-1 in this case. It turns out that p-1 is smooth, which means that the largest prime factor of p-1 is relatively small.
+
+$$
+\begin{align}
+&4170887899225220949299992515778389605737976266979828742347 \\ 
+&= 2 \times 19 \times 151 \times 577 \times 67061 \times 18279232319 \times  11154337669 \times 9213409941746658353293481
+\end{align}
+$$
+
+Even the largest factor, 9213409941746658353293481, is only 83 bits long. This calls for a Pohlig-Hellman attack. 
+
+#### Pohlig-Hellman Attack
+What is a Pohlig-Hellman Attack though? According to [Wikipedia](https://en.wikipedia.org/wiki/Pohlig%E2%80%93Hellman_algorithm), it is a way to break down a large DLP problem into multiple smaller sub-problems, then combine the result using chinese reminder theorm (CRT). The rough idea is as follows. Given a group $\mathbb{G}$ with order $p$, where $p$ is not a prime, and we want to find $x$ such that $g^x = k$ 
+1. We know that after $p$ operation, the cycle loop back to itself. i.e. $k^p = 1$
+2. Let's take a factor $e$ and let $t = p/e$, if we pre-compute $g_0 = g^t$ and set x then we know $g_0^e = 1$
+3. This tells us that $g_0$ actually forms a smaller group with group order $e$. If we transfor g and k into element of this smaller group, it will be easier to find the solution. This solution is of course incomplete, but we will gain some information related to x.
+4. In particular, the tranformation takes $g_0 = g^t$ and $k_0 = k^t$, and solve for the equation $g_0^{x_0} = k_0$, we can observe the following equation.
+$$\begin{align}
+g^x &= k \\  
+(g^x)^t &= k^t \\  
+g_0^{x_0} = (g^t)^{x_0} &= k^t \\ 
+xt &\equiv tx_0 \mod{p}\\ 
+x &\equiv x_0  \mod{\frac{p}{t}} \qquad \because t \vert p \ ^{*1}  \\   
+x &\equiv x_0  \mod{e} \\ 
+\end{align}$$
+\*1: Note that I'm not sure if this holds, but it make sense =D
+5. After we gather all the reminder from the various factors, we can use CRT to reconstruct $x$ from all the $x_0$
+
+#### Cado-nfs
+Even though we can split the problem down into small chunks, we still need to deal with each smaller pieces. All the factors except the last one is relatively easy to tackle, as the built in sage discrete log function solves them quite easily. The last one is still problematic though. From some previous experience (i.e. GoogleCTF2023 - cursved), I know that cado-nfs is a good tool for solving dlp of size less than around 250 bits. I need to search around a little bit and found [this working repo](https://github.com/cado-nfs/cado-nfs). Just follow the steps to install it. 
+
+Reading the user manual, we learn that the --dlp option allows us to find the discrete log of a number, but to a "random" base $b$, so $b^{x} \equiv a \mod b$. That's totally fine, as we can do a change of base algorithm to switch to any log base. 
+$log_a(b) = log_c(b) / log_c(a)$
+
+To use cado-nfs, we will first need to know that number we need to take the discrete log with. A short python script gives as the value.
+```
+p = 4170887899225220949299992515778389605737976266979828742347
+k = 0x49545b7d5204bd639e299bc265ca987fb4b949c461b33759
+
+p_fs = [2, 19, 151, 577, 67061, 18279232319, 111543376699, 9213409941746658353293481]
+e = p_fs[-1]
+t = (p-1) // ell
+
+print(pow(7, t, p))
+print(pow(k, t, p))
+# crack_the_safe$ python pre.py
+#  2874921958440504604797627466936335381864476070281841795223
+#  243520888574004127020636437512040223299982667282493152276
+```
+
+Then we run the following commands:
+```
+crack_the_safe$ cado-nfs.py -dlp -ell 9213409941746658353293481 target=2874921958440504604797627466936335381864476070281841795223 4170887899225220949299992515778389605737976266979828742347
+[...]
+Info:Complete Factorization / Discrete logarithm: Total cpu/elapsed time for entire Discrete logarithm: 247.08/102.098
+Info:root: If you want to compute one or several new target(s), run ./cado-nfs.py /tmp/cado.sw277cqc/p60.parameters_snapshot.0 target=<target>[,<target>,...]
+Info:root: logbase = 689700230313623370222183478814904246546188182712829892313
+Info:root: target = 2874921958440504604797627466936335381864476070281841795223
+Info:root: log(target) = 8483029440103488262728827 mod ell
+8483029440103488262728827
+
+crack_the_safe$ cado-nfs.py /tmp/cado.sw277cqc/p60.parameters_snapshot.0 target=243520888574004127020636437512040223299982667282493152276
+[...]
+Info:Complete Factorization / Discrete logarithm: Total cpu/elapsed time for entire Discrete logarithm: 325.79/124.619 # <- this time seems to be accumulative from the previoius run
+Info:root: If you want to compute one or several new target(s), run ./cado-nfs.py /tmp/cado.sw277cqc/p60.parameters_snapshot.1 target=<target>[,<target>,...]
+Info:root: logbase = 689700230313623370222183478814904246546188182712829892313
+Info:root: target = 243520888574004127020636437512040223299982667282493152276
+Info:root: log(target) = 1607529382666405025125600 mod ell
+1607529382666405025125600
+```
+From the output we know the base is 689700230313623370222183478814904246546188182712829892313, and the log is 8483029440103488262728827 and 1607529382666405025125600 respectively. Now we just plug in the value, do CRT with the rest of the result, and we recover the flag.
+
+`uiuctf{Dl0g_w/__UnS4F3__pR1Me5_}`
+
+\*\* Note that from the output above, we can see that the total time elapses for the two command is around 124.6 seconds, or around 2 minute. I'm running this on a basic 11th gen i7 laptop, which is relatively low computing power I'd say. So it's not exactly fast, but reasonable for most computer. I think most computer can compute DLP using cado-nfs way faster than mine.
+
+
+{% capture safe_cracker_py %}
+```python
+from Crypto.Util.number import long_to_bytes, bytes_to_long
+from Crypto.Cipher import AES
+from subprocess import check_output
+
+p = 4170887899225220949299992515778389605737976266979828742347
+ct = bytes.fromhex("ae7d2e82a804a5a2dcbc5d5622c94b3e14f8c5a752a51326e42cda6d8efa4696")
+k = 0x49545b7d5204bd639e299bc265ca987fb4b949c461b33759
+
+F = GF(p)
+p_fs = [2, 19, 151, 577, 67061, 18279232319, 111543376699, 9213409941746658353293481]
+ell = p_fs[-1]
+remain = (p-1) // ell
+
+# to send to cado_nfs
+print(F(7)^(remain))
+print(F(k)^(remain))
+
+# from cado_nfs
+# cado-nfs.py -dlp -ell 9213409941746658353293481 target=2874921958440504604797627466936335381864476070281841795223 4170887899225220949299992515778389605737976266979828742347
+# cado-nfs.py /tmp/cado.vxkkpmj5/p60.parameters_snapshot.0 target=2874921958440504604797627466936335381864476070281841795223
+log7, logk = 8483029440103488262728827, 1607529382666405025125600
+logbase = 689700230313623370222183478814904246546188182712829892313
+
+res = []
+for prime in p_fs[:-1]:
+    r = (p-1)//prime
+    P7 = F(7)^r
+    Pk = F(k)^r
+    res.append(discrete_log(Pk, P7))
+
+assert(F(logbase)^log7 == F(7)^remain)
+assert(F(logbase)^logk == F(k)^remain)
+full_log_ell = int(logk * pow(log7, -1, ell) % ell)
+assert((F(7)^remain)^full_log_ell, F(k)^remain)
+
+key = CRT(res+[full_log_ell], p_fs)
+
+print(key)
+assert(int(pow(7, key, p)) == k)
+print(AES.new(long_to_bytes(int(key)),AES.MODE_ECB).decrypt(ct))
+
+#uiuctf{Dl0g_w/__UnS4F3__pR1Me5_}
+
+```
+{% endcapture %}
+{% include widgets/toggle-field.html toggle-name="safe_cracker_py" button-text="Show solve.sage" toggle-text=safe_cracker_py %}
 ## Reversing
 ### vmwhere
 ```text

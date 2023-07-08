@@ -97,15 +97,17 @@ What is a Pohlig-Hellman Attack though? According to [Wikipedia](https://en.wiki
 2. Let's take a factor $e$ and let $t = p/e$, if we pre-compute $g_0 = g^t$ and set x then we know $g_0^e = 1$
 3. This tells us that $g_0$ actually forms a smaller group with group order $e$. If we transfor g and k into element of this smaller group, it will be easier to find the solution. This solution is of course incomplete, but we will gain some information related to x.
 4. In particular, the tranformation takes $g_0 = g^t$ and $k_0 = k^t$, and solve for the equation $g_0^{x_0} = k_0$, we can observe the following equation.
-$$\begin{align}
-g^x &= k \\  
-(g^x)^t &= k^t \\  
-g_0^{x_0} = (g^t)^{x_0} &= k^t \\ 
-xt &\equiv tx_0 \mod{p}\\ 
-x &\equiv x_0  \mod{\frac{p}{t}} \qquad \because t \vert p \ ^{*1}  \\   
-x &\equiv x_0  \mod{e} \\ 
-\end{align}$$
-\*1: Note that I'm not sure if this holds, but it make sense =D
+
+	$$\begin{align}
+	g^x &= k \\  
+	(g^x)^t &= k^t \\  
+	g_0^{x_0} = (g^t)^{x_0} &= k^t \\ 
+	xt &\equiv tx_0 \mod{p}\\ 
+	x &\equiv x_0  \mod{\frac{p}{t}} \qquad \because t \vert p \ ^{*1}  \\   
+	x &\equiv x_0  \mod{e} \\ 
+	\end{align}$$
+	\*1: Note that I'm not sure if this holds, but it make sense =D
+
 5. After we gather all the reminder from the various factors, we can use CRT to reconstruct $x$ from all the $x_0$
 
 When I'm initially learning a bout pohlig-hellman attack, [this blog](https://l0z1k.com/pohlig_hellman_attack) that applies this attack on elliptic curve cryptography helped me a lot. I get to understand how the attack works more intuiatively. If you want more detailed description on the attack, this will be a great resource along with the wiki page. 

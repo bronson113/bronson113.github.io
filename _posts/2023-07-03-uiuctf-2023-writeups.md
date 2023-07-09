@@ -21,6 +21,55 @@ closed are three encrypted messages. Our mole overheard the plaintext of message
 Author: Pomona
 Solves: 390
 ```
+We are given three encrypted file and one plain text file. We also know that the file is encrypted using "one time pad" that's reused across the three file. First we need to understand what is one time pad.
+
+One time pad is a encryption method, which takes a key that's the same length as the plaintext, and xor the key with the plaintext. If the key is chosen at random, it is clear that one time pad is secure. In fact, it is proven to be perfectly secure (perfect secrecy). In this challenge, however, the key is shared across the three files. Why this is insecure then?
+
+We'll need to first understand the xor operation, xor stands for exclusive xor, so the output will be true if and only if one of the two input is true. Below is the truth table of the xor operation between two bits:
+
+
+| $a$ | $b$ | $a \oplus b$ |
+| -------- | -------- | -------- |
+| 0    | 0     | 0     |
+| 0    | 1     | 1     |
+| 1    | 0     | 1     |
+| 1    | 1     | 0     |
+
+Here we can make three observations:
+1. ($a \oplus a = 0$): If we look at the first and the last row, we can notice that if a and b are the same, the output will always be zero. This is reasonable, if we have two copy of the same time, they'll always both be true or both be false, so they'll never disagree with each other.
+2.  ($ a \oplus 0 = a$): If we look at the case where b is 0, we can observe that the output is the same as a. This is also reasonable, if we fix one of the two iteam to be false, then the other one can fully control the output.
+3.  ($ a \oplus b = b \oplus a$): Lets try to swap a and b in the table, we'll notice that the output is still the same. This is natural as the original definition doesn't have and ordering between the two items. 
+
+Now that we have this property, what can be learn?
+
+If we look back to the one time pad scheme.
+$$\mathtt{plaintext} \oplus \mathtt{key} = \mathtt{ciphertext}$$
+
+What if we xor both side with a plaintext?
+$$\begin{align}
+\mathtt{plaintext} \oplus \mathtt{key} \oplus \mathtt{plaintext} &= \mathtt{ciphertext} \oplus \mathtt{plaintext} \\ 
+\mathtt{plaintext} \oplus \mathtt{plaintext}  \oplus \mathtt{key} &= \mathtt{ciphertext} \oplus \mathtt{plaintext} \qquad (3.) \\ 
+0 \oplus \mathtt{key} &= \mathtt{ciphertext} \oplus \mathtt{plaintext}  \qquad (1.)\\ 
+\mathtt{key} &= \mathtt{ciphertext} \oplus \mathtt{plaintext} \qquad (2.) \\ 
+\end{align}$$
+
+Wow, if we xor the ciphertext with the plaintext, we can recover the key! Let's do that with the plaintext file we have, then try to decrypt the other two files.
+```python 
+def xor(b1, b2):
+    return bytes([i^j for (i, j) in zip(b1, b2)])
+		
+key = xor(open("p2", "rb").read(), open("c2", "rb").read())
+print(key)
+print(xor(key, open("c1","rb").read()))
+print(xor(key, open("c3","rb").read()))
+```
+```text
+three-time-pad$ python solve.py
+b'v\x90\x9f48@\t+\xc7\xc3\x81\x02\xa2\xac_\xf1\xcf!\x0c\x0c\xd8Y\x17\x9dr%\x80z\xb8\x84\xbf\x8d\xe6~\xe7\xfb\xd8\xac\xc22y\xb0!s\xae\x17\tc\x0e'
+b'before computers, one-time pads were sometimes'
+b'uiuctf{burn_3ach_k3y_aft3r_us1ng_1t}'
+```
+Heyy there's the flag! `uiuctf{burn_3ach_k3y_aft3r_us1ng_1t}`
 
 ### At Home
 ```text
@@ -29,7 +78,67 @@ Mom said we had food at home
 Author: Anakin
 Solves: 316
 ```
+```python
+from Crypto.Util.number import getRandomNBitInteger
 
+flag = int.from_bytes(b"uiuctf{******************}", "big")
+
+a = getRandomNBitInteger(256)
+b = getRandomNBitInteger(256)
+a_ = getRandomNBitInteger(256)
+b_ = getRandomNBitInteger(256)
+
+M = a * b - 1
+e = a_ * M + a
+d = b_ * M + b
+
+n = (e * d - 1) // M
+
+c = (flag * e) % n
+
+print(f"{e = }")
+print(f"{n = }")
+print(f"{c = }")
+```
+
+In this challenge, c is calculated from `flag * e % n`. To solve this challenge, we can simply divide both side by e (or multiply by the inverse element).
+
+$$\begin{align}
+c &\equiv flag \times e &\mod{n}\\ 
+c \times e^{-1} &\equiv flag \times e \times e^{-1} &\mod{n}\\ 
+c \times e^{-1} &\equiv flag &\mod{n}
+\end{align}$$
+
+Now the problem is now to find the inverse element of e? Well what an inverse element means is a number $e^{-1}$ such that
+$$ e \times e^{-1} \equiv 1 \mod{n} $$
+if we expend that equation, we'll get
+$$ e \times e^{-1} + k\times n = 1, \mathtt{where} \ k \in \mathbb{Z} $$
+Based on [Bézout's identity](https://en.wikipedia.org/wiki/Bézout's_identity), we know that there exist $a$ and $b$ such that
+$$ ax + by = gcd(x, y) $$
+Here the x and y is our e and n respectively. Let's check the gcd of the two.
+```
+at_home$ python
+Python 3.8.10 (default, May 26 2023, 14:05:08)
+[GCC 9.4.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from math import gcd
+>>> e = [...]
+>>> n = [...]
+>>> gcd(n, e)
+1
+```
+Clearly the gcd is 1, so Bézout's identity applies. Now we just need to find a and b respectively. One such method is by using the [Extended Euclidean algorithm]( https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm). But python actually provides a easy method to calculate the modular inverse of a number, using the default power function `pow(e, -1, n)` (I belive this is only is python 3.8+. The full solve script is as follows
+```python
+from Crypto.Util.number import long_to_bytes
+e = 359050389152821553416139581503505347057925208560451864426634100333116560422313639260283981496824920089789497818520105189684311823250795520058111763310428202654439351922361722731557743640799254622423104811120692862884666323623693713
+n = 26866112476805004406608209986673337296216833710860089901238432952384811714684404001885354052039112340209557226256650661186843726925958125334974412111471244462419577294051744141817411512295364953687829707132828973068538495834511391553765427956458757286710053986810998890293154443240352924460801124219510584689
+c = 67743374462448582107440168513687520434594529331821740737396116407928111043815084665002104196754020530469360539253323738935708414363005373458782041955450278954348306401542374309788938720659206881893349940765268153223129964864641817170395527170138553388816095842842667443210645457879043383345869
+
+inve = pow(e, -1, n)
+flag = (inve*c)%n
+print(long_to_bytes(flag))
+```
+And that gives us the flag! `uiuctf{W3_hav3_R5A_@_h0m3}`
 ### Group Project(ion)
 ```text
 Group Project
@@ -46,6 +155,8 @@ Author: Anakin
 Solves: 232 (ver1)/ 127 (ver2)
 ```
 
+
+
 ### Morphing Time
 ```text
 The all revealing Oracle may be revealing a little too much...
@@ -54,6 +165,165 @@ nc morphing.chal.uiuc.tf 1337
 
 Author: Anakin
 Solves: 140
+```
+
+{% capture morphing_chal_py %}
+```python
+#!/usr/bin/env python3
+from Crypto.Util.number import getPrime
+from random import randint
+
+with open("/flag", "rb") as f:
+    flag = int.from_bytes(f.read().strip(), "big")
+
+
+def setup():
+    # Get group prime + generator
+    p = getPrime(512)
+    g = 2
+
+    return g, p
+
+
+def key(g, p):
+    # generate key info
+    a = randint(2, p - 1)
+    A = pow(g, a, p)
+
+    return a, A
+
+
+def encrypt_setup(p, g, A):
+    def encrypt(m):
+        k = randint(2, p - 1)
+        c1 = pow(g, k, p)
+        c2 = pow(A, k, p)
+        c2 = (m * c2) % p
+
+        return c1, c2
+
+    return encrypt
+
+
+def decrypt_setup(a, p):
+    def decrypt(c1, c2):
+        m = pow(c1, a, p)
+        m = pow(m, -1, p)
+        m = (c2 * m) % p
+
+        return m
+
+    return decrypt
+
+
+def main():
+    print("[$] Welcome to Morphing Time")
+
+    g, p = 2, getPrime(512)
+    a = randint(2, p - 1)
+    A = pow(g, a, p)
+    decrypt = decrypt_setup(a, p)
+    encrypt = encrypt_setup(p, g, A)
+    print("[$] Public:")
+    print(f"[$]     {g = }")
+    print(f"[$]     {p = }")
+    print(f"[$]     {A = }")
+
+    c1, c2 = encrypt(flag)
+    print("[$] Eavesdropped Message:")
+    print(f"[$]     {c1 = }")
+    print(f"[$]     {c2 = }")
+
+    print("[$] Give A Ciphertext (c1_, c2_) to the Oracle:")
+    try:
+        c1_ = input("[$]     c1_ = ")
+        c1_ = int(c1_)
+        assert 1 < c1_ < p - 1
+
+        c2_ = input("[$]     c2_ = ")
+        c2_ = int(c2_)
+        assert 1 < c2_ < p - 1
+    except:
+        print("!! You've Lost Your Chance !!")
+        exit(1)
+
+    print("[$] Decryption of You-Know-What:")
+    m = decrypt((c1 * c1_) % p, (c2 * c2_) % p)
+    print(f"[$]     {m = }")
+
+    # !! NOTE !!
+    # Convert your final result to plaintext using
+    # long_to_bytes
+
+    exit(0)
+
+
+if __name__ == "__main__":
+    main()
+```
+{% endcapture %}
+{% include widgets/toggle-field.html toggle-name="morphing_chal_py" button-text="Show chal.py" toggle-text=morphing_chal_py %}
+
+If we look at the source code, we know that we're dealing with an elgamal encryption. The privillege we have is being able to "modify" the cipher texts by multiplying some number. Let's dig deeper into how elgamal encrypts a message. First, we generates the public parameters $g$ and $p$. We then generate a key pair $a, A$, where $A \equiv g^a \mod{p}$. $A$ is then distributed along with the public parameters as the public key, and a is kept as the private key. This encryption relays on the security of the discrete log problem, where it's hard to find $a$ give $A$.
+
+To encrypt a message, the sender first choose a random number $k$. The sender then calculate two number $c_1 \equiv g^k \mod{p}$ and $c_2 \equiv m \times A^k \mod{p}$. Notice that the second equation expands to
+$$
+\begin{align}
+c_2 &\equiv m \times (g^{a})^{k} &\mod{p}\\ 
+c_2 &\equiv m \times g^{ak} &\mod{p}\\ 
+c_2 &\equiv m \times (g^{k})^{a} &\mod{p}\\ 
+c_2 &\equiv m \times c_{1}^{a} &\mod{p}\\ 
+\end{align}
+$$
+Therefore, since the reciever knows $a$, they can simply multiply $c_2$ by the inverse of $c_1^a$ to get back the message.
+
+Now what's the attack here? Notice the random number $k$, what would happen if we choose a different random number, lets say $k' = k+1$, what would the encrypted message be like now?
+$$
+\begin{align}
+c_1' &\equiv g^{k'} &\mod{p}\\ 
+&\equiv g^{k+1} &\mod{p}\\ 
+&\equiv g^{k}\times g &\mod{p}\\ 
+&\equiv c_1 \times g &\mod{p}\\ 
+\\ 
+c_2' &\equiv m \times A^{k'} &\mod{p}\\ 
+&\equiv m \times A^{k+1} &\mod{p}\\ 
+&\equiv m \times A^{k} \times A &\mod{p}\\ 
+&\equiv c_2 \times A &\mod{p}\\ 
+\end{align}$$
+Which is a different, equally valid, encryption of the original message. This property is call homomorphism. In this case, we learn that elgamal is homomorphic under multiplication. Hence the name morphing time. 
+
+To solve this challenge, if we submit (g, A) as (c1_, c2_), the server will decrypt the flag for us, and we simply need to convert that back to bytes. 
+
+flag: `uiuctf{h0m0m0rpi5sms_ar3_v3ry_fun!!11!!11!!}`
+
+```
+from Crypto.Util.number import long_to_bytes, bytes_to_long
+from sage.all import *
+
+from pwn import *
+nc_str = "nc morphing.chal.uiuc.tf 1337"
+_, host, port = nc_str.split(" ")
+p = remote(host, int(port))
+
+p.recvline()
+p.recvline()
+p.recvline()
+G = int(p.recvline().split(b"g =")[-1])
+P = int(p.recvline().split(b"p =")[-1])
+A = int(p.recvline().split(b"A =")[-1])
+print(G, P, A)
+p.recvline()
+c1 = int(p.recvline().split(b"c1 =")[-1])
+c2 = int(p.recvline().split(b"c2 =")[-1])
+
+p.sendline(str(G))
+p.sendline(str(A))
+
+p.recvuntil("Decryption")
+p.recvline()
+m = int(p.recvline().split(b"m =")[-1])
+
+print(long_to_bytes(m))
 ```
 
 ### Crack The Safe

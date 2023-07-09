@@ -599,25 +599,6 @@ print(AES.new(long_to_bytes(int(key)),AES.MODE_ECB).decrypt(ct))
 {% endcapture %}
 {% include widgets/toggle-field.html toggle-name="safe_cracker_py" button-text="Show solve.sage" toggle-text=safe_cracker_py %}
 ## Reversing
-### vmwhere
-```text
-Usage: ./chal program
-
-Author: richard
-Solves: 124 (ver1)/ 66 (ver2)
-```
-### geoguesser
-```text
-I thought geoguesser was too easy, so I made it harder.
-
-Usage: janet -i program.jimage
-
-nc geoguesser.chal.uiuc.tf 1337
-
-Author: richard
-Solves: 38
-```
-
 ### Fast Calculator
 ```text
 Check out our new super fast calculator!

@@ -155,7 +155,126 @@ Author: Anakin
 Solves: 232 (ver1)/ 127 (ver2)
 ```
 
+{% capture project_chal_py %}
+```python
+from Crypto.Util.number import getPrime, long_to_bytes
+from random import randint
+import hashlib
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
 
+
+with open("/flag", "rb") as f:
+    flag = f.read().strip()
+
+def main():
+    print("[$] Did no one ever tell you to mind your own business??")
+
+    g, p = 2, getPrime(1024)
+    a = randint(2, p - 1)
+    A = pow(g, a, p)
+    print("[$] Public:")
+    print(f"[$]     {g = }")
+    print(f"[$]     {p = }")
+    print(f"[$]     {A = }")
+
+    try:
+        k = int(input("[$] Choose k = "))
+    except:
+        print("[$] I said a number...")
+        return
+    if k == 1 or k == p - 1 or k == (p - 1) // 2 or k <= 0 or k >= p:
+        print("[$] I'm not that dumb...")
+        return
+
+    Ak = pow(A, k, p)
+    b = randint(2, p - 1)
+    B = pow(g, b, p)
+    Bk = pow(B, k, p)
+    S = pow(Bk, a, p)
+
+    key = hashlib.md5(long_to_bytes(S)).digest()
+    cipher = AES.new(key, AES.MODE_ECB)
+    c = int.from_bytes(cipher.encrypt(pad(flag, 16)), "big")
+
+    print("[$] Ciphertext using shared 'secret' ;)")
+    print(f"[$]     {c = }")
+    return
+
+if __name__ == "__main__":
+    main()
+```
+{% endcapture %}
+{% include widgets/toggle-field.html toggle-name="project_chal_py" button-text="Show chal.py" toggle-text=project_chal_py %}
+
+For this challenge, the server is performing something like a three-party diffi-hellman key exchange, where there are two party that provides $g^a % p$ and $g^b % p$, and you provide a $c$. The secret is then calculated from $g^{abc} % p$. Now the objective is to use c to control the output of the secret such that we can recover the message. 
+
+There are different approaches. One initial idea might be to let $c = 0$. This way, the secret becomes $g^{ab\times 0} = g^0 = 1$, and we can derive the key ourselves. And this approach indeed works for `group project` since there are no check against this. However, for `group projection`, this approach is blocked and we need some other ways to derive the key. 
+
+First, we'll need some background on [Fermat's little theorem](https://en.wikipedia.org/wiki/Fermat%27s_little_theorem). 
+
+| Fermat's little theorem states that if p is a prime number, then for any integer a, the number a $a^{p}-a$ is an integer multiple of p. In the notation of modular arithmetic, this is expressed as  $a^{p} \equiv a \mod{p}$, 
+
+In other words
+$$a^{p-1} \equiv 1 \mod{p}$$
+
+Therefore, when we are finding a large power of a number under modulo, we can take the modulo on the exponents as well in the following way.
+
+$$g^{abc} \equiv g^{(abc \mod{p-1})} \mod{p}$$
+
+This means that if $p-1\vert abc$, $g^{abc} \equiv g^{0} \equiv 1 \mod{p}$
+
+Now the challenge also forbid us from sending $p-1$ or $\frac{p-1}{2}$ as input. But lets say we supply $\frac{p-1}{3}$, if by random chance either $a$ or $b$ contains 3 as a factor, the resulting $abc$ will divide $p-1$, we the key will be fixed to 1. There is also a chance that 3 is not a factor of p-1, then this strategy won't work, and we need to skip those cases. The probably overall is $(1/3)(1-(1-1/3)^2) =5/27$, so if we just send a couple requests, we should get the flag. And indeed this works.
+
+Flag -
+
+(group project): `uiuctf{brut3f0rc3_a1n't_s0_b4d_aft3r_all!!11!!}`
+
+(group projection): `uiuctf{brut3f0rc3_w0rk3d_b3f0r3_but_n0t_n0w!!11!!!}`
+
+```python
+from Crypto.Util.number import long_to_bytes, bytes_to_long
+from sage.all import *
+from Crypto.Cipher import AES
+
+from pwn import *
+
+def solve():
+    nc_str = "nc group-projection.chal.uiuc.tf 1337"
+    _, host, port = nc_str.split(" ")
+    p = remote(host, int(port))
+
+    p.recvline()
+    p.recvline()
+    p.recvline()
+    G = int(p.recvline().split(b"g =")[-1])
+    P = int(p.recvline().split(b"p =")[-1])
+    A = int(p.recvline().split(b"A =")[-1])
+    print(G, P, A)
+    if (P-1)%3 != 0:
+        p.close()
+        return False
+
+    p.sendline(str((P-1)//3).encode())
+
+    p.recvline()
+    c = int(p.recvline().split(b"c =")[-1])
+
+    print(c)
+
+    key = hashlib.md5(long_to_bytes(1)).digest()
+    cipher = AES.new(key, AES.MODE_ECB)
+    flag = cipher.decrypt(long_to_bytes(c))
+    print(flag)
+    p.close()
+    return b"uiuctf{" in flag
+
+if __name__ == "__main__":
+    while not solve():
+        print("Attempting")
+
+#uiuctf{brut3f0rc3_w0rk3d_b3f0r3_but_n0t_n0w!!11!!!}
+```
 
 ### Morphing Time
 ```text

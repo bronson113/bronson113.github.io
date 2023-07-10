@@ -482,8 +482,8 @@ Even the largest factor, 9213409941746658353293481, is only 83 bits long. This c
 
 #### Pohlig-Hellman Attack
 What is a Pohlig-Hellman Attack though? According to [Wikipedia](https://en.wikipedia.org/wiki/Pohlig%E2%80%93Hellman_algorithm), it is a way to break down a large DLP problem into multiple smaller sub-problems, then combine the result using chinese reminder theorm (CRT). The rough idea is as follows. Given a group $\mathbb{G}$ with order $p$, where $p$ is not a prime, and we want to find $x$ such that $g^x = k$ 
-1. We know that after $p$ operation, the cycle loop back to itself. i.e. $k^p = 1$
-2. Let's take a factor $e$ and let $t = p/e$, if we pre-compute $g_0 = g^t$ and set x then we know $g_0^e = 1$
+1. We know that after $p$ operation, the cycle loop back to itself. i.e. $k^p = 1$ for any k.
+2. Let's take a factor $e$ and let $t = p/e$, if we pre-compute $g_0 = g^t$, then we know $g_0^e = 1$ as $t \times e = p$ 
 3. This tells us that $g_0$ actually forms a smaller group with group order $e$. If we transfor g and k into element of this smaller group, it will be easier to find the solution. This solution is of course incomplete, but we will gain some information related to x.
 4. In particular, the tranformation takes $g_0 = g^t$ and $k_0 = k^t$, and solve for the equation $g_0^{x_0} = k_0$, we can observe the following equation.
 

@@ -386,6 +386,7 @@ if __name__ == "__main__":
 If we look at the source code, we know that we're dealing with an elgamal encryption. The privillege we have is being able to "modify" the cipher texts by multiplying some number. Let's dig deeper into how elgamal encrypts a message. First, we generates the public parameters $g$ and $p$. We then generate a key pair $a, A$, where $A \equiv g^a \mod{p}$. $A$ is then distributed along with the public parameters as the public key, and a is kept as the private key. This encryption relays on the security of the discrete log problem, where it's hard to find $a$ give $A$.
 
 To encrypt a message, the sender first choose a random number $k$. The sender then calculate two number $c_1 \equiv g^k \mod{p}$ and $c_2 \equiv m \times A^k \mod{p}$. Notice that the second equation expands to
+
 $$
 \begin{align}
 c_2 &\equiv m \times (g^{a})^{k} &\mod{p}\\ 
@@ -394,9 +395,11 @@ c_2 &\equiv m \times (g^{k})^{a} &\mod{p}\\
 c_2 &\equiv m \times c_{1}^{a} &\mod{p}\\ 
 \end{align}
 $$
+
 Therefore, since the reciever knows $a$, they can simply multiply $c_2$ by the inverse of $c_1^a$ to get back the message.
 
 Now what's the attack here? Notice the random number $k$, what would happen if we choose a different random number, lets say $k' = k+1$, what would the encrypted message be like now?
+
 $$
 \begin{align}
 c_1' &\equiv g^{k'} &\mod{p}\\ 
@@ -409,6 +412,7 @@ c_2' &\equiv m \times A^{k'} &\mod{p}\\
 &\equiv m \times A^{k} \times A &\mod{p}\\ 
 &\equiv c_2 \times A &\mod{p}\\ 
 \end{align}$$
+
 Which is a different, equally valid, encryption of the original message. This property is call homomorphism. In this case, we learn that elgamal is homomorphic under multiplication. Hence the name morphing time. 
 
 To solve this challenge, if we submit (g, A) as (c1_, c2_), the server will decrypt the flag for us, and we simply need to convert that back to bytes. 

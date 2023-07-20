@@ -43,6 +43,7 @@ Here we can make three observations:
 Now that we have this property, what can be learn?
 
 If we look back to the one time pad scheme.
+
 $$\mathtt{plaintext} \oplus \mathtt{key} = \mathtt{ciphertext}$$
 
 What if we xor both side with a plaintext?
@@ -111,12 +112,19 @@ c \times e^{-1} &\equiv flag &\mod{n}
 \end{align}$$
 
 Now the problem is now to find the inverse element of e? Well what an inverse element means is a number $e^{-1}$ such that
+
 $$ e \times e^{-1} \equiv 1 \mod{n} $$
+
 if we expend that equation, we'll get
+
 $$ e \times e^{-1} + k\times n = 1, \mathtt{where} \ k \in \mathbb{Z} $$
+
 Based on [Bézout's identity](https://en.wikipedia.org/wiki/Bézout's_identity), we know that there exist $a$ and $b$ such that
+
 $$ ax + by = gcd(x, y) $$
+
 Here the x and y is our e and n respectively. Let's check the gcd of the two.
+
 ```
 at_home$ python
 Python 3.8.10 (default, May 26 2023, 14:05:08)
@@ -128,6 +136,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 >>> gcd(n, e)
 1
 ```
+
 Clearly the gcd is 1, so Bézout's identity applies. Now we just need to find a and b respectively. One such method is by using the [Extended Euclidean algorithm]( https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm). But python actually provides a easy method to calculate the modular inverse of a number, using the default power function `pow(e, -1, n)` (I belive this is only is python 3.8+. The full solve script is as follows
 ```python
 from Crypto.Util.number import long_to_bytes
@@ -217,6 +226,7 @@ First, we'll need some background on [Fermat's little theorem](https://en.wikipe
 | Fermat's little theorem states that if p is a prime number, then for any integer a, the number a $a^{p}-a$ is an integer multiple of p. In the notation of modular arithmetic, this is expressed as  $a^{p} \equiv a \mod{p}$, 
 
 In other words
+
 $$a^{p-1} \equiv 1 \mod{p}$$
 
 Therefore, when we are finding a large power of a number under modulo, we can take the modulo on the exponents as well in the following way.
@@ -472,6 +482,7 @@ def crack_safe(key):
 assert crack_safe(key) and AES.new(key,AES.MODE_ECB).decrypt(ct) == FLAG
 ```
 This is a really short challenge and not a lot of code to read through. Essentially we need to solve the discrete log problem to find the key such that 
+
 $$7^{key} \equiv \mathtt{0x49545b7d5204bd639e299bc265ca987fb4b949c461b33759} \mod{p}$$
 
 We can first verify that p is a prime number. Typically, DLP under finite field is consider a hard problem. However, the difficulty of the DLP problem is bounded by the largest prime factor of the order of the finite field. Let's check the factors of the order, which is p-1 in this case. It turns out that p-1 is smooth, which means that the largest prime factor of p-1 is relatively small.

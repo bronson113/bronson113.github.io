@@ -1,6 +1,3 @@
----
----
-
 <iframe width="100%" height="360" frameborder="0" src="https://www.shadertoy.com/embed/cdBcWV?gui=false&paused=false&muted=false" allowfullscreen></iframe>
 
 Cybersecurity B.S. Student @ Purdue University

@@ -559,7 +559,7 @@ Info:root: target = 243520888574004127020636437512040223299982667282493152276
 Info:root: log(target) = 1607529382666405025125600 mod ell
 1607529382666405025125600
 ```
-From the output we know the base is 689700230313623370222183478814904246546188182712829892313, and the log is 8483029440103488262728827 and 1607529382666405025125600 respectively. Now we just plug in the value, do CRT with the rest of the result, and we recover the flag.
+From the output we know the base is 6897002\[...\]9892313, and the log is 8483029440103488262728827 and 1607529382666405025125600 respectively. Now we just plug in the value, do CRT with the rest of the result, and we recover the flag.
 
 `uiuctf{Dl0g_w/__UnS4F3__pR1Me5_}`
 

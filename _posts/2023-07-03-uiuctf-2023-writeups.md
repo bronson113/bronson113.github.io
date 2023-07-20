@@ -46,6 +46,7 @@ If we look back to the one time pad scheme.
 $$\mathtt{plaintext} \oplus \mathtt{key} = \mathtt{ciphertext}$$
 
 What if we xor both side with a plaintext?
+
 $$\begin{align}
 \mathtt{plaintext} \oplus \mathtt{key} \oplus \mathtt{plaintext} &= \mathtt{ciphertext} \oplus \mathtt{plaintext} \\ 
 \mathtt{plaintext} \oplus \mathtt{plaintext}  \oplus \mathtt{key} &= \mathtt{ciphertext} \oplus \mathtt{plaintext} \qquad (3.) \\ 

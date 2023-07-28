@@ -1,5 +1,9 @@
 ---
 title: GoogleCTF 2023 Writeup
+tag:
+- CTF
+- Writeup
+- Multiple
 ---
 
 # GoogleCTF 2023 Writeup

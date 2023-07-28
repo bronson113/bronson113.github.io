@@ -1,5 +1,9 @@
 ---
 title: ALLES!CTF 2021 - entrAPI
+tag:
+- CTF
+- Writeup
+- Misc
 ---
 
 # ALLES!CTF 2021 - entrAPI

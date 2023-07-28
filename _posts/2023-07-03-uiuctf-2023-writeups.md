@@ -1,5 +1,9 @@
 ---
 title: UIUCTF 2023 Writeups
+tag:
+- CTF
+- Writeup
+- Multiple
 ---
 
 # UIUCTF 2023 Writeups

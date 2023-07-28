@@ -1,5 +1,10 @@
 ---
 title: GoogleCTF 2022 - segfault labyrinth
+tag:
+- CTF
+- Writeup
+- Misc
+- Pwn
 ---
 
 # GoogleCTF 2022 - segfault labyrinth

@@ -1,5 +1,9 @@
 ---
 title: b01lersCTF 2023 - padlock
+tag:
+- CTF
+- My Challenge
+- Rev
 ---
 
 # b01lersCTF 2023 - Padlock

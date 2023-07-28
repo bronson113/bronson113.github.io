@@ -1,5 +1,9 @@
 ---
 title: HITCONCTF - cclemon
+tag:
+- CTF
+- Writeup
+- Rev
 ---
 
 # HITCONCTF - cclemon

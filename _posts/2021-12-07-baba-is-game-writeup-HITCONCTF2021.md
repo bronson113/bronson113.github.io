@@ -1,5 +1,9 @@
 ---
 title: HITCONCTF - baba is game
+tag:
+- CTF
+- Writeup
+- Rev
 ---
 
 # HITCONCTF - baba is game

@@ -1,5 +1,9 @@
 ---
 title: Greycat CTF Quals 2023 Writeup
+tag:
+- CTF
+- Writeup
+- Multiple
 ---
 
 # Greycat CTF Quals 2023 Writeup

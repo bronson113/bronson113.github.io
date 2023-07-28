@@ -53,7 +53,7 @@ layout: default
       {%- if paginator.total_pages > 1 -%}
       <div class="pagination" style="display: flex; justify-content: center;">
         <div class="pagination__menu">
-          <ul class="nav navbar-nav flex-row justify-content-center">
+          <ul class="nav navbar-nav flex-row justify-content-center pagination">
             {%- assign _max_show = 5 -%}
             {%- assign _max_show_modulo_two = _max_show | modulo: 2 -%}
             {%- assign _length = paginator.total_pages -%}

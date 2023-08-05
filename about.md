@@ -55,11 +55,11 @@ Competition and Awards
 : ### [Mitre eCTF 2021](https://ectf.mitre.org/) (with Purdue)
 : *Feburary 2021 - May 2021*
 : 8th Place /  16 teams 
-: My Implementation: https://github.com/bronson113/2021-ectf-purdue
+: My Implementation: [https://github.com/bronson113/2021-ectf-purdue](https://github.com/bronson113/2021-ectf-purdue)
 : ### [HITCON CTF 2020](https://ctf.hitcon.org)  (with Goburin\') 
 : *December 2020* 
 : 2nd Place (Final) / 3rd Place (Qualifier) / 710 teams
-: ### [AIS3 2019]((https://ais3.org/))
+: ### [AIS3 2019](https://ais3.org/)
 : *July 2019*
 : Best Project Award
 
@@ -93,7 +93,7 @@ Project
 : ### [Ferris Sweep Keyboard](https://github.com/bronson113/zmk-config)
 : *December 2021* \| Micro-controller, Keyboard, Soldering
 : I attempted to create my own keyboard using the [ferris sweep 34 key design](https://github.com/davidphilipbarr/Sweep). I used [nice-nano](https://nicekeyboards.com/nice-nano/) micro controller along with the zmk firmware to support bluetoon connection. The link above goes to the zmk config I used during the build.
-: ### [This Blog Website](https://github.com/bronson113/bronson113.github.io)
+: ### [This Blog Website](/)
 : *September 2021 - current* \| Jekyll, Markdown, HTML, CSS
 : This website is originally created from a [jekyll blog website template](https://chadbaldwin.net/2021/03/14/how-to-build-a-sql-blog.html) by [Chad Baldwin ](https://github.com/chadbaldwin). I later expended the website to suit my need. 
 : The components updated includes:
@@ -101,6 +101,7 @@ Project
 : - Tag filter in page archieve, taken mostly from [TeXt theme](https://github.com/kitian616/jekyll-TeXt-theme)
 : - Separate about me page
 : - Back to top button
+: Link to source code: [https://github.com/bronson113/bronson113.github.io](https://github.com/bronson113/bronson113.github.io)
 : ### Code Optimization on Pattern Matching Algorithm
 : *June 2021* \| C++, Optimization, Cache
 : Implement the FM-index algorithm under the ideal time complexity
@@ -110,7 +111,7 @@ Project
 : *july 2019* \| Machine Learning, Python
 : Adversarial Example are images that are wrongly identified by machine learning models. This project aims to create a model to automagically generate adversarial examples. 
 : This is a project at AIS3 2019 and won the best project award
-: ### [Battle Starship](bronson113.github.io/battlestarship/)
+: ### [Battle Starship](https://bronson113.github.io/battlestarship/)
 :  *January 2018*
 : This is a minigame made in single page html + javascript
 : Credit to [donnie9171](https://scratch.mit.edu/users/donnie9171/) for the original idea and prototype in [Scratch](https://scratch.mit.edu/projects/160599153/).

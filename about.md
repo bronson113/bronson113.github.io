@@ -21,6 +21,9 @@ Education
 Experiences
 : ### IT Internship @ [CTS Corporation](https://www.ctscorp.com/)
 : *May 2023 - August 2023*
+: Integrated existing policy with security standards and identified the gaps during security audits
+: Utilized scripting skills in analyzing data from automatic network vulnerability scanning tools
+: Migrated documentations into centralized location along with created appropriate counterparts for the new systems introduced
 : ### Undergraduate Research Assistant @ [Purdue University PurSecLab](https://pursec.cs.purdue.edu/)
 : *Decemeber 2022 - May 2023*
 : Research Control Flow Technology in linux kernel 

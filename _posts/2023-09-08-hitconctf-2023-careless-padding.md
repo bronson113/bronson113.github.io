@@ -351,6 +351,11 @@ if __name__ == "__main__":
 ### Theme
 In the blog post I mentioned that we need a know plaintext block. To create a not-so-obvious one I thought about various ideas like zipping or drawing the flag in a small png. But all the ideas end up with one problem: The final file is too large. Testing with a oversea connection with optimized IO, I can only reasonably get ~200 bytes over 10 minutes, and we wish to make sure the challenge can be solved below that timeframe from everywhere. @maple3142 give me the idea of using json, and along with the flag format, that would make up a full block. Initially it's something like `{'flag':...` but I then realize that the python json module adds a space after the colon, so I choosed key instead, and the theme just grow from there =D Hopefully it's not too weird and enjoyable.
 
+### Server misconfigure
+It is actually not intended for the server to have such a short timeout. As mentioned in the main article, it took 40 second even for an optimized solver to solve 1 block, so a 30 second timer is pretty unreasonable. I didn't notice that the server have an timeout initially, but soon someone solved it, so it's too late at this point to change that. My justification though is that you can leak different part of the flag across multiple connections, so technically this shouldn't add too much complexity to the solve. But I do still appoligies for the inconvinent that this brings. 
+### Unintended Solution
+After the competition ended, @mouthon and @4yn mentioned that there is an unintended solution to this challenge. If we look at the line `_Y = message[(block_count-2)*N+(X%N)]`, notice that if block_count is less then 2, the index would be negative. Thanks to the wonderful property of python negative indexing, this would actually still run, but get the bytes in the same block as X. This provides a lot of information about the single block. Again, this proves how careless I am... The detail of this attack is left as an exercise to the reader.
+
 ## Appendix A - the proper padding and attack
 In the main article, I mentioned that the challenge is easier if implemented correctly. Diffing the two files (this challenge and the correct implementation) shows the following:
 

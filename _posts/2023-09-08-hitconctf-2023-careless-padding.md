@@ -23,7 +23,7 @@ How careless can you be as an assistant...
 nc chal-careless-padding.chal.hitconctf.com 11111
 
 author: bronson113
-solves: ?/?
+solves: 30
 ```
 
 We are presented with the challenge code as follows

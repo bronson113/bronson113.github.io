@@ -78,9 +78,10 @@ Project
 : ### [Ascii art web server](https://github.com/bronson113/ascii_art_web_server)
 : *April 2023 - May 2023* \| Server, Cocurrency, OS 
 : This project created a server with web interface that takes a url to an image and converts it to ascii art. The server spawns works threads and spread the incoming connections to the different workers to allow cocurrent processing. The server experiments with the new proc_fd and the ability to pass file descriptors to different processes. 
-: ### Padding Oracle On Custom Padding Methods
+: ### [Padding Oracle On Custom Padding Methods](/2023/09/08/hitconctf-2023-careless-padding.html)
 : *March 2023 - April 2023*  \| Cryptography, Block Cipher
 : Discoverd efficient attack method against novel padding method proposed in [this conference paper](https://link.springer.com/chapter/10.1007/978-3-319-30840-1_21)
+: Created a CTF challenge based on the attack method in HITCON CTF
 : ### [Vulnerability Explorer](https://github.com/bronson113/vuln_visualizer)
 : *January 2023 - current*   \|  Python, Flask, Compiler \| !Note that this project is still in idea phase 
 : Visualized execution of vulnerable program graphically for better comprehension

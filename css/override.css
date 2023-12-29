@@ -59,30 +59,34 @@
 hr {
   margin-top: 30px;
   margin-bottom: 20px;
+  border-width: 0;
 }
 
 .site-header {
-    position: fixed;
+    position:fixed;
     top: 0px;
-    width: 100%;
     background-color: var(--main-background-color);
     backdrop-filter: blur(3px);
-    z-index: 1;
+    z-index: 5;
+    border-bottom: 1px solid #e8e8e8;
+    color: var(--main-dark-color);
 }
 
-.site-title, .site-title:hover, .site-title:focus, .site-title:active {
+a.navbar-brand, a.navbar-brand:hover, a.navbar-brand:focus, a.navbar-brand:active {
     text-decoration: none;
+    color: var(--main-dark-color);
+    font-size: 1.5rem;
 }
 
 .page-content {
-    margin-top: 40px;
+    margin-top: 60px;
 }
 .site-nav {
     line-height:100%;
 }
 
 /* page nav animation on hover */
-.trigger .page-link{
+.navbar-nav .nav-link{
     display: inline-block;
     vertical-align: middle;
     -webkit-transform: perspective(1px) translateZ(0);
@@ -94,9 +98,10 @@ hr {
     -webkit-transition-duration: 0.3s;
     transition-duration: 0.3s;
     text-decoration: none;
+    color: var(--main-dark-color);
 }
 
-.trigger .page-link:before{
+.navbar-nav .nav-link:before{
     content: "";
     position: absolute;
     z-index: -1;
@@ -118,7 +123,7 @@ hr {
 }
 
 
-.trigger .page-link:hover::before, .trigger .page-link:focus::before, .trigger .page-link:active::before{
+.navbar-nav .nav-link:hover::before, .navbar-nav .nav-link:focus::before, .navbar-nav .nav-link:active::before{
     -webkit-transform: scaleX(1);
     transform: scaleX(1);
 }
@@ -250,7 +255,7 @@ a.item__header:visited {
 }
 
 /* about me listing style - PC*/
-@media screen and (min-width: 600px){
+@media screen and (min-width: 768px){
     dt { 
         color: var(--main-accent-color);
         font-size: 1.2em;
@@ -269,9 +274,11 @@ a.item__header:visited {
         float: none;
         clear: both;
         margin: 0;
+        background-color: var(--main-background-color);
     }
 
     dd h3{
+        margin-top: 15px;
         margin-bottom: 4px;
     }
 
@@ -282,7 +289,7 @@ a.item__header:visited {
 }
 
 /* about me listing style - Phone */
-@media screen and (max-width: 600px){
+@media screen and (max-width: 768px){
     dt{
         color: var(--main-accent-color);
         font-size: 2em;
@@ -294,6 +301,7 @@ a.item__header:visited {
 
     dl + hr{
         border-top: 0px;
+        background-color: var(--main-background-color);
     }
 
     dd h3{

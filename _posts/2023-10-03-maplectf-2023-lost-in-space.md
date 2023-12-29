@@ -44,6 +44,7 @@ After looking at the disassembly in [binary ninja cloud](https://cloud.binary.ni
 1. Read shellcode from the user and place it in an executable chunk (read call in main())
 1. Seccomp the process so only the marked chunks can call syscall (seccomp())
 1. Execute shellcode (jump_to_shellcode_with_umap())
+
 ![](/img/maplectf2023-lost-in-space-main.png)
 
 One important structure used is the map structure, which looks like the following
@@ -102,6 +103,7 @@ $ seccomp-tools dump ./lost-in-space
 When I dump the seccomp rule, I notice that the location on line 2 and 3 changes every time. This aligns with our guess that we are only allowed to execute syscall in that marked chunk, which changes each execution. The seccomp rules are quite simple. Basically, all syscalls are blocked except munmap if it was called outside of the allowed chunk.
 
 Lastly, the shellcode is called using the following snippet.
+
 ![](/img/maplectf2023-lost-in-space-jmp-shellcode.png)
 
 The binary wipes out all registers before our shellcode is called, and both stack and binary are unmapped before our shellcode, so we can't reuse values on stack or binary.
@@ -154,7 +156,7 @@ The output of the compiler can mostly be used directly, but the vis array appear
 # Solve
 In the shellcode I then set up the stack to start from 0x800 and grow downward, and the vis array to start from 0xa00 and grow upward. To save space for the visited chunks, I truncated the address of each chunk to only the top 16 changing bits, so we can store more value within the allotted space. 
 
-```asm
+```nasm
 mov rax, rdx ; rdx contains the address to the middle of the chunk
 mov rsp, rdx ; set stack
 mov rbp, rdx ; set stack
@@ -169,7 +171,7 @@ call dfs
 
 When the call to dfs returns, rax should point to the executable chunk, I then write the second stage shellcode to that location.
 
-```asm
+```nasm
 add rax, 0x800 ; executable chunk, middle
 mov rbp, rax   ; new stack
 mov rsp, rax
@@ -193,7 +195,7 @@ After the solve and seeing the flag, it's clear that a simpler approach can be t
 
 # Appendix A - exp.py
 {% capture solve_py %}
-```
+```python
 #!/usr/bin/python3
 
 from pwn import *

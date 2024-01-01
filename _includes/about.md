@@ -4,7 +4,7 @@ Cybersecurity B.S. Student @ Purdue University
 
 Former President of [b01lers](https://b01lers.com) @ Purdue.
 
-Active member of Taiwanese CTF Team TSJ. Part of Balsn.217@TSJ.tw
+Active member of Taiwanese CTF Team ${CyStick} and TSJ. Part of TWN48.
 
 Specialize in **Pwnable**, **Crypto**, and all kind of miscellaneous challenges.
 

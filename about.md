@@ -19,6 +19,10 @@ Education
 ---
 
 Experiences
+: ### Security Research Internship @ [Trapa Security](https://trapa.tw/)
+: *September 2023 - Present*
+: Analyzed security vulnerability in Linux Kernel
+: Created 1-day exploit to known vulnerability
 : ### IT Internship @ [CTS Corporation](https://www.ctscorp.com/)
 : *May 2023 - August 2023*
 : Integrated existing policy with security standards and identified the gaps during security audits
@@ -43,6 +47,12 @@ Experiences
 ---
 
 Competition and Awards
+: ### [SECCON CTF 2023](https://ctf.seccon.jp/) (with ${CyStick})
+: *September 2023 - December 2023*
+: 3rd Place (Final) / 2nd Place (Qualifier) / 653 teams
+: ### [HITCON CTF 2023](https://hitcon.org/2023/carnival/CTF/) (with TWN48)
+: *August 2023 - November 2023*
+: Created 3 challenges for qualifier and 1 challenge for final 
 : ### [Mitre eCTF 2023](https://ectf.mitre.org/) (with Purdue)
 : *Feburary 2023 - May 2023*
 : 6th Place /  80 teams \| Best Poster award

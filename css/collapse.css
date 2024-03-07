@@ -6,12 +6,6 @@
     display: flex;
 }
 
-.code-toggle:before{
-    content: "▼";
-    display: flex;
-    margin-right: 10px;
-}
-
 .code-toggle.collapsed{
     background: none!important;
     border: none;
@@ -20,9 +14,20 @@
     display: flex;
 }
 
-.code-toggle.collapsed:before{
-    content: "▶";
-    display: flex;
-    margin-right: 10px;
+.code-toggle p {
+    margin-bottom: 0px;
 }
+
+/* .code-toggle:before{ */
+/*     content: "▼"; */
+/*     display: flex; */
+/*     margin-right: 10px; */
+/* } */
+
+
+/* .code-toggle.collapsed:before{ */
+/*     content: "▶"; */
+/*     display: flex; */
+/*     margin-right: 10px; */
+/* } */
 

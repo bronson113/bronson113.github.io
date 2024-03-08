@@ -1,12 +1,62 @@
 /* define colors */
 :root{
-    --main-accent-color: #31b0d5;
+    --main-accent-color: #4cd7ff;
+    --second-accent-color: #2a7ae2;
     --secondary-color-1: #eef;
     --secondary-color-2: #cce;
     --secondary-color-3: #aad;
     --secondary-color-4: #88c;
-    --main-background-color: #f4f0f460;
+    --main-header-background-color: #f4f0f460;
+    --main-background-color: #fdfdfd;
     --main-dark-color: #333;
+    --main-black-color: #111;
+}
+/* dark mode */
+body.dark-mode{
+    --main-accent-color: #00c5ff;
+    --secondary-color-1: #1b1b2d;
+    --secondary-color-2: #122059;
+    --secondary-color-3: #002784;
+    --secondary-color-4: #0051ff;
+    --main-header-background-color: #0909095e;
+    --main-background-color: #222;
+    --main-dark-color: #ccc;
+    --main-black-color: #eee;
+}
+
+/* make all element use variable coloring */
+body {
+    color: var(--bs-body-color); 
+    background-color: var(--bs-body-bg); 
+    -webkit-transition-property: color;
+    transition-property: color;
+    -webkit-transition-duration: 0.3s;
+    transition-duration: 0.3s;
+}
+
+a { 
+    color: var(--bs-link-color); 
+}
+a:visited { 
+    color: var(--bs-primary-border-subtle); 
+}
+a:hover { 
+    color: var(--bs-link-hover-color); 
+}
+
+table {
+    color: var(--bs-light-text-emphasis);
+    border: var(--bs-light-border-subtle);
+}
+
+
+.logo {
+    margin-right:10px;
+    opacity: 1;
+}
+
+.dark-mode .logo{
+    opacity: 0.6;
 }
 
 /* rounded button */
@@ -59,17 +109,17 @@
 hr {
   margin-top: 30px;
   margin-bottom: 20px;
-  border-width: 0;
 }
 
 .site-header {
     position:fixed;
     top: 0px;
-    background-color: var(--main-background-color);
+    background-color: var(--main-header-background-color);
     -webkit-backdrop-filter: blur(3px);
     backdrop-filter: blur(3px);
     z-index: 5;
-    border-bottom: 1px solid #e8e8e8;
+    border-bottom: 1px solid var(--secondary-color-1);
+    border-top: 0;
     color: var(--main-dark-color);
 }
 
@@ -181,7 +231,7 @@ span.MJXc-display{
     text-align: center;
 
     color: var(--main-dark-color);
-    background-color: var(--main-background-color);
+    background-color: var(--main-header-background-color);
     border: 2px solid var(--main-dark-color); 
     -webkit-backdrop-filter: blur(2px);
     backdrop-filter: blur(2px);
@@ -199,26 +249,32 @@ ul.nav-pills > li {
 }
 
 .btn-info{
+    color: var(--main-black-color);
     background: var(--main-accent-color);
 }
 
 .tag-btn--all:not(.btn-info) {
-    background: var(--main-background-color);
+    color: var(--main-black-color);
+    background: var(--main-header-background-color);
 }
 
 .tag-btn-1:not(.btn-info) {
+    color: var(--main-black-color);
     background: var(--secondary-color-1);
 }
 
 .tag-btn-2:not(.btn-info) {
+    color: var(--main-black-color);
     background: var(--secondary-color-2);
 }
 
 .tag-btn-3:not(.btn-info) {
+    color: var(--main-black-color);
     background: var(--secondary-color-3);
 }
 
 .tag-btn-4:not(.btn-info) {
+    color: var(--main-black-color);
     background: var(--secondary-color-4);
 }
 
@@ -250,10 +306,23 @@ div.article-list section ul.items li{
     color: var(--main-dark-color);
     font-size: 1em;
     font-weight: bold;
+    -webkit-transition-property: color;
+    transition-property: color;
+    -webkit-transition-duration: 0.3s;
+    transition-duration: 0.3s;
 }
 
 a.item__header:visited {
     color: var(--main-dark-color);
+    -webkit-transition-property: color;
+    transition-property: color;
+    -webkit-transition-duration: 0.3s;
+    transition-duration: 0.3s;
+}
+
+a.item__header:hover{
+    text-decoration: none;
+    color: var(--secondary-color-4);
 }
 
 /* about me listing style - PC*/
@@ -276,7 +345,7 @@ a.item__header:visited {
         float: none;
         clear: both;
         margin: 0;
-        background-color: var(--main-background-color);
+        background-color: var(--main-header-background-color);
     }
 
     dd h3{
@@ -303,7 +372,7 @@ a.item__header:visited {
 
     dl + hr{
         border-top: 0px;
-        background-color: var(--main-background-color);
+        background-color: var(--main-header-background-color);
     }
 
     dd h3{

@@ -80,11 +80,7 @@ layout: default
             {%- if paginator.previous_page -%}
               {%- include snippets/prepend-baseurl.html path=paginator.previous_page_path -%}
               {%- assign _href = __return -%}
-              <li class="page-item"><a class="btn btn-secondary btn-circle page-link" href="{{ _href }}">
-                <i class="fas fa-angle-left"></i>
-              </a></li>
-            {%- else -%}
-              <li class="page-item disabled"><a class="btn btn-secondary btn-circle page-link">
+              <li class="page-item"><a class="page-link" href="{{ _href }}">
                 <i class="fas fa-angle-left"></i>
               </a></li>
             {%- endif -%}
@@ -92,7 +88,7 @@ layout: default
             {%- for page in (1.._length) -%}
               {%- if page == _cur -%}
                 <li class="page-item active">
-                  <a class="btn btn-primary btn-circle focus page-link" role="button" aria-disabled="true"><span>{{ page }}</span></a>
+                  <a class="page-link" role="button" aria-disabled="true"><span>{{ page }}</span></a>
                 </li>
 
               {%- elsif page == 1 -%}
@@ -100,7 +96,7 @@ layout: default
                 {%- include snippets/prepend-baseurl.html path=_home_path -%}
                 {%- assign _href = __return -%}
                 <li class="page-item">
-                  <a class="btn btn-secondary btn-circle page-link" href="{{ _href }}"><span>{{ page }}</span></a>
+                  <a class="page-link" href="{{ _href }}"><span>{{ page }}</span></a>
                 </li>
 
               {%- else -%}
@@ -113,14 +109,14 @@ layout: default
                     {%- include snippets/prepend-baseurl.html path=site.paginate_path -%}
                     {%- assign _href = __return -%}
                     <li class="page-item">
-                      <a class="btn btn-secondary btn-circle page-link" href="{{ _href | replace: ':num', page }}"><span>{{ page }}</span></a>
+                      <a class="page-link" href="{{ _href | replace: ':num', page }}"><span>{{ page }}</span></a>
                     </li>
                   {%- endif -%}
                 {%- else -%}
                   {%- include snippets/prepend-baseurl.html path=site.paginate_path -%}
                   {%- assign _href = __return -%}
                   <li class="page-item">
-                    <a class="btn btn-secondary btn-circle page-link" href="{{ _href | replace: ':num', page }}"><span>{{ page }}</span></a>
+                    <a class="page-link" href="{{ _href | replace: ':num', page }}"><span>{{ page }}</span></a>
                   </li>
                 {%- endif -%}
               {%- endif -%}
@@ -129,11 +125,7 @@ layout: default
             {%- if paginator.next_page -%}
               {%- include snippets/prepend-baseurl.html path=paginator.next_page_path -%}
               {%- assign _href = __return -%}
-              <li class="page-item"><a class="btn button--secondary button--circle page-link" href="{{ _href }}">
-                <i class="fas fa-angle-right"></i>
-              </a></li>
-            {%- else -%}
-              <li class="page-item disabled"><a class="btn button--secondary button--circle disabled page-link">
+              <li class="page-item"><a class="page-link" href="{{ _href }}">
                 <i class="fas fa-angle-right"></i>
               </a></li>
             {%- endif -%}

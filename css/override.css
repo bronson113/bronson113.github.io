@@ -354,6 +354,7 @@ a.item__header:hover{
         float: left; 
         height: 100px; 
         border-right: 1px solid var(--main-accent-color);  
+        direction: rtl;
     }
 
     dl + hr{

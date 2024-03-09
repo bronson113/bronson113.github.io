@@ -18,9 +18,13 @@ linkedin_username: "bo-shiun-yen"
 #########################################################################################
 ######### Nothing below needs to be changed (unless you know what you're doing) #########
 #########################################################################################
+
 theme: "minima"
 
-#rss: rss
+rss: rss
+feed: 
+    tags: true
+
 
 markdown: kramdown
 kramdown:

@@ -59,6 +59,22 @@ table {
     opacity: 0.6;
 }
 
+
+/* style color-mode button */
+.color-mode {
+    cursor: pointer;
+    -webkit-transition-property: all;
+    -webkit-transition-duration: 0.2s;
+    -webkit-transition-timing-function: ease;
+    transition-property: all;
+    transition-duration: 0.2s;
+    transition-timing-function: ease;
+}
+
+.color-mode:hover {
+    transform: scale(1.2);
+}
+
 /* rounded button */
 .btn-pill {
     border-radius:23px;

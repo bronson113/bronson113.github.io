@@ -38,7 +38,7 @@ a {
     color: var(--bs-link-color); 
 }
 a:visited { 
-    color: var(--bs-primary-border-subtle); 
+    color: var(--main-accent-color); 
 }
 a:hover { 
     color: var(--bs-link-hover-color); 

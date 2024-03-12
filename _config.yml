@@ -24,6 +24,7 @@ theme: "minima"
 rss: rss
 feed: 
     tags: true
+    disable_in_development: true
 
 
 markdown: kramdown

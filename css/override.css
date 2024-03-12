@@ -10,6 +10,13 @@
     --main-background-color: #fdfdfd;
     --main-dark-color: #333;
     --main-black-color: #111;
+    --bs-table-color: var(--bs-emphasis-color);
+    --bs-table-bg: var(--bs-body-bg);
+    --bs-table-border-color: var(--bs-border-color);
+    --bs-table-striped-color: var(--bs-emphasis-color);
+    --bs-table-striped-bg: rgba(var(--bs-emphasis-color-rgb), 0.05);
+    --bs-table-hover-color: var(--bs-emphasis-color);
+    --bs-table-hover-bg: rgba(var(--bs-emphasis-color-rgb), 0.075);
 }
 /* dark mode */
 body.dark-mode{
@@ -22,6 +29,13 @@ body.dark-mode{
     --main-background-color: #212529;
     --main-dark-color: #ccc;
     --main-black-color: #eee;
+    --bs-table-color: #fff;
+    --bs-table-bg: #212529;
+    --bs-table-border-color: #4d5154;
+    --bs-table-striped-bg: #2c3034;
+    --bs-table-striped-color: #fff;
+    --bs-table-hover-bg: #424549;
+    --bs-table-hover-color: #fff;
 }
 
 /* make all element use variable coloring */
@@ -45,9 +59,30 @@ a:hover {
 }
 
 table {
-    color: var(--bs-light-text-emphasis);
-    border: var(--bs-light-border-subtle);
+    color: var(--bs-table-color);
+    background-color: var(--bs-table-bg);
+    border-color: var(--bs-table-border-color);
 }
+
+table:not(.rouge-table) > tbody > tr:hover > *{
+    color: var(--bs-table-hover-color);
+    background-color: var(--bs-table-hover-bg);
+}
+
+table tr:nth-child(odd) { 
+    color: var(--bs-table-color);
+    background-color: var(--bs-table-bg); 
+}
+
+table tr:nth-child(even) { 
+    color: var(--bs-table-striped-color);
+    background-color: var(--bs-table-striped-bg); 
+}
+table th { 
+    color: var(--bs-table-striped-color);
+    background-color: var(--bs-table-striped-bg); 
+}
+
 
 
 .logo {

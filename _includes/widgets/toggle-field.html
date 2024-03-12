@@ -1,4 +1,4 @@
-<div class="accordion" id="{{include.toggle-name}}">
+<div class="accordion mb-2" id="{{include.toggle-name}}">
   <div class="accordion-item">
     <p class="accordion-header code-toggle h2" id="hd-{{include.toggle-name}}">
       <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#{{include.toggle-name}}-content" aria-expanded="true" aria-controls="{{include.toggle-name}}-content">
@@ -6,7 +6,7 @@
       </button>
     </p>
     <div id="{{include.toggle-name}}-content" class="accordion-collapse collapse" aria-labelledby="hd-{{include.toggle-name}}" data-bs-parent="#{{include.toggle-name}}">
-      <div class="accordion-body">
+      <div class="accordion-body pb-0">
           {{include.toggle-text | markdownify}} 
       </div>
     </div>

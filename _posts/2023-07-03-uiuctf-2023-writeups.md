@@ -239,7 +239,7 @@ $$g^{abc} \equiv g^{(abc \mod{p-1})} \mod{p}$$
 
 This means that if $p-1\vert abc$, $g^{abc} \equiv g^{0} \equiv 1 \mod{p}$
 
-Now the challenge also forbid us from sending $p-1$ or $\frac{p-1}{2}$ as input. But lets say we supply $\frac{p-1}{3}$, if by random chance either $a$ or $b$ contains 3 as a factor, the resulting $abc$ will divide $p-1$, we the key will be fixed to 1. There is also a chance that 3 is not a factor of p-1, then this strategy won't work, and we need to skip those cases. The probably overall is $(1/3)(1-(1-1/3)^2) =5/27$, so if we just send a couple requests, we should get the flag. And indeed this works.
+Now the challenge also forbid us from sending $p-1$ or $\frac{p-1}{2}$ as input. But lets say we supply $\frac{p-1}{3}$, if by random chance either $a$ or $b$ contains 3 as a factor, the resulting $abc$ will divide $p-1$, then the key will be fixed to 1. There is also a chance that 3 is not a factor of p-1, then this strategy won't work, and we need to skip those cases. The probably overall is $(1/3)(1-(1-1/3)^2) =5/27$, so if we just send a couple requests, we should get the flag. And indeed this works.
 
 Flag -
 

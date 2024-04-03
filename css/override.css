@@ -114,6 +114,11 @@ table th {
     border-radius:23px;
 }
 
+/* checkbox padding */
+.task-list-item-checkbox {
+    margin-right: 0.5em;
+}
+
 /* Post navigation links */
 .post_navi {
   display: flex;

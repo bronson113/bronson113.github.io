@@ -1,9 +1,9 @@
 ---
 title: MapleCTF 2023 - lost-in-space
 tag:
-- CTF
-- Pwn
-- Writeup
+  - CTF
+  - Pwn
+  - Writeup
 ---
 
 # MapleCTF 2023 - lost-in-space

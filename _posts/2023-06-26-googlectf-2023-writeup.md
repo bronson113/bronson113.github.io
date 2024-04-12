@@ -1,30 +1,38 @@
 ---
 title: GoogleCTF 2023 Writeup
 tag:
-- CTF
-- Writeup
-- Multiple
+  - CTF
+  - Writeup
+  - Misc
+  - Reverse
+  - Pwn
+  - Crypto
 ---
-
 # GoogleCTF 2023 Writeup
+
 ## Overview
+
 Last weekend, I played GoogleCTF with b01lers. We ranked 55th in the end. I solved 2 misc, 1 rev, 1 crypto, and 3 pwn. This writeup will mostly focus on my own thought process while solving the challenges, and I'd recommand reading the [official writeups](https://github.com/google/google-ctf/tree/master/2023) as well.
 
-Challenge solved after the competition are marked as \[\*\] 
+Challenge solved after the competition are marked as \[*] 
 
 <!--more-->
 
----
+- - -
 
 ## Misc
+
 ### npc
+
 ```text
 A friend handed me this map and told me that it will lead me to the flag. 
 It is confusing me and I don't know how to read it, can you help me out?
 
 solves: 102
 ```
+
 {% capture npc_encrypt_py %}
+
 ```python
 # Copyright 2023 Google LLC
 #
@@ -137,8 +145,8 @@ def encrypt(num_words, secret):
 
 if __name__ == '__main__':
   encrypt(num_words=int(sys.argv[1]), secret=sys.argv[2].encode('utf-8'))
-
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="npc_encrypt_py"
@@ -158,6 +166,7 @@ I think that the word set phase can potentially be change to a more efficient ap
 `CTF{S3vEn_bR1dg35_0f_K0eN1g5BeRg}`
 
 {% capture npc_solve_py %}
+
 ```python
 import re
 import random
@@ -284,8 +293,8 @@ for words in Subsets(valid_words):
                     pass
 #standardwatersigngivenchosen
 #b'CTF{S3vEn_bR1dg35_0f_K0eN1g5BeRg}'
-
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="npc_solve_py"
@@ -294,6 +303,7 @@ for words in Subsets(valid_words):
 ### symatrix
 
 {% capture symatrix_parse_py %}
+
 ```python
 f = open("encoder.c")
 
@@ -314,12 +324,11 @@ for line in f:
 with open("encoder.py", "w") as f:
     f.write("\n".join(source))
 ```
+
 {% endcapture %}
 
-
-		
-
 {% capture symatrix_encoder_py %}
+
 ```python
 from PIL import Image
 from random import randint
@@ -390,11 +399,11 @@ base_image.close()
 print("Work done!")
 exit(1)
 ```
+
 {% endcapture %}
 
-
-
 {% capture symatrix_solve_py %}
+
 ```python
 from PIL import Image
 import binascii
@@ -419,6 +428,7 @@ for i in range(0, y_len):
 flag = long_to_bytes(int(flag_bits, 2))
 print(flag)
 ```
+
 {% endcapture %}
 
 ```text
@@ -428,6 +438,7 @@ You have been tasked with reversing the encoder file and creating a decoder as s
 
 solves: 110
 ```
+
 [encoder.c (From googleCTF github)](https://github.com/google/google-ctf/blob/master/2023/misc-symatrix/challenge/encoder.c)
 
 The challenge comes with a large encoder.c file, this seems intimidating initially. However, reading through the code a little bit, we quickly found out that there are part of the original python file written in the comment. Using a simple parser I extracted the python source from encoder.c file. (My parser actually missed a else: line, and I manuelly added that afterward)
@@ -441,12 +452,12 @@ Base on the encoder.py file, it's clear that the original image is mirrored, and
 
 {% include widgets/toggle-field.html toggle-name="symatrix_solve_py" button-text="Show solve.py" toggle-text=symatrix_solve_py %}
 
+- - -
 
-
-
----
 ## Reverse
+
 ### Turtle
+
 ```text
 Are we not all but turtles drifting in the sea, executing instructions as we stumble upon them?
 
@@ -463,8 +474,8 @@ It took a while to understand that the function is actually a binary search on t
 
 `CTF{iT5_E-tUr+1es/AlL.7h3;waY:d0Wn}`
 
-
 {% capture tutle_translate_py %}
+
 ```python
 from Crypto.Util.number import long_to_bytes, bytes_to_long
 from sage.all import *
@@ -697,6 +708,7 @@ def run():
 
 run()
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="tutle_translate_py"
@@ -704,6 +716,7 @@ run()
 		
 		
 {% capture turtle_trans_txt %}
+
 ```txt
 <0000>: sp += -83
 <0001>: R[2] = M[0]
@@ -955,12 +968,14 @@ run()
 <0247>: sp += 4
 <0248>: ret
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="turtle_trans_txt"
     button-text="Show trans.txt" toggle-text=turtle_trans_txt %}
 		
 {% capture turtle_simplify_py %}
+
 ```python
 M[0] = 67
 M[1] = 84
@@ -1028,12 +1043,14 @@ def check(a, b, c):
 for i in range(43, 122):
         check(35, i, 30) #R0, R1, R5
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="turtle_simplify_py"
     button-text="Show simplify.txt" toggle-text=turtle_simplify_py%}
 
 {% capture turtle_solve_py %}
+
 ```python
 from PIL import Image
 
@@ -1056,20 +1073,26 @@ for i in range(len(chars)):
 flag = "".join([flag[i] for i in ordering])
 print("CTF{"+flag+"}")
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="turtle_solve_py"
     button-text="Show solve.py" toggle-text=turtle_solve_py%}
 
----
+- - -
+
 ## Crypto
+
 ### Least Common Genominator?
+
 ```text
 Someone used this program to send me an encrypted message but I can't read it! It uses something called an LCG, do you know what it is? I dumped the first six consecutive values generated from it but what do I do with it?!
 
 solves: 352
 ```
+
 {% capture lcg_generator_py %}
+
 ```python
 from secret import config
 from Crypto.PublicKey import RSA
@@ -1164,6 +1187,7 @@ if __name__ == '__main__':
     with open ("public.pem", "w") as pub_file:
         pub_file.write(rsa.exportKey().decode())
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="lcg_generator_py"
@@ -1176,6 +1200,7 @@ While recovering m and c is trivial, recovering n is harder. I found [this scrip
 `CTF{C0nGr@tz_RiV35t_5h4MiR_nD_Ad13MaN_W0ulD_b_h@pPy}`
 
 {% capture lcg_solve_py %}
+
 ```python
 from math import gcd
 from sage.all import GF, Zmod
@@ -1313,14 +1338,18 @@ print(c)
 
 print(long_to_bytes(pow(c, d, n)))
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="lcg_solve_py"
     button-text="Show solve.py" toggle-text=lcg_solve_py %}
 
----
+- - -
+
 ## Pwn
+
 ### Write Flag Where - Overview
+
 ```text
 Part1:
 This challenge is not a classical pwn
@@ -1350,6 +1379,7 @@ From reversing the challenge, we can quickly identify the behavior. The challeng
 
 The decompiled code from ghidra for part 3, with some modification to reflect each level:
 {% capture wfw_chal_c %}
+
 ```c
 int main(){
   local_c = open("/proc/self/maps",0);
@@ -1403,16 +1433,20 @@ int main(){
   return 1;
 }
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="wfw_chal_c"
     button-text="Show chal.c" toggle-text=wfw_chal_c %}
+
 ### Write Flag Where - Part 1
+
 For part 1, there is a dprintf function call after the entrence to the while loop, so writing the flag to the string that are printed each loop can leak the flag. 
 
 `CTF{Y0ur_j0urn3y_is_0n1y_ju5t_b39innin9}`
 
 {% capture wfw_solve_py %}
+
 ```python
 from pwn import *
 
@@ -1445,18 +1479,21 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="wfw_solve_py"
     button-text="Show solve.py" toggle-text=wfw_solve_py %}
 
 ### Write Flag Where - Part 2
+
 Part 2 proves to be trickier. In ghidra, the exit call stopped the decompiler from disassembling the code further, therefore missing a dprintf function call after the `exit(0)` call. Instead, I tried to leak the flag using the sscanf function with the string `0x%llx %u`. 
 The sscanf function call will attempt to match the input format string from the input string. In the original challenge, it's trying to match the starting 0x before reading the hex numbers as input. For example, if we overwrite the format string to `Cx%llx %u` and send the input `Cx0 0`, the program will continue normally, but input `Dx0 0` will exit immediately after. Therefore, we can overwrite that string, then attempt to read different strings, leaking the flag byte by byte. See `solve2.py` for implementation details.
 
 `CTF{impr355iv3_6ut_can_y0u_s01v3_cha113ng3_3?}`
 
 {% capture wfw_solve2_py %}
+
 ```python
 #!/usr/bin/python3
 from pwn import *
@@ -1529,15 +1566,19 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="wfw_solve2_py"
     button-text="Show solve2.py" toggle-text=wfw_solve2_py  %}
 	
+
 ### Write Flag Where - Part 3
+
 Lastly for part 3, we can't write into the main binary region, including the all the data sections. After looking through the functions in libc that are used, I found that the read function is the most likely function to be hijacked, since the arguments used to call the function is helpful. 
 
 Meanwhile, I also look for some useful instructions we can create using the flag prefix. I notice that 0x43 ('C') is a prefix in x86 assembly, and can be used to nop out instruction with minimal effects on most registers. Another interesting instruction is 0x7b ('{'), which is jnp. This allow use to jmp further down the program. The changes made to the read function is as follow: 
+
 1. Overwrite the second syscall to set rsi from rsp+0x43
 2. Overwrite ja after second syscall to jnp to jump downward
 3. Overwrite jump direction of the last jmp to jump to write function
@@ -1547,6 +1588,7 @@ Meanwhile, I also look for some useful instructions we can create using the flag
 see `libc_original.asm` for the original libc function (disassembled from ghidra), and `libc_changed.asm` for the final state after all the writes, along with some comments to how the final payload achieved the target.
 
 {% capture wfw_before_asm %}
+
 ```text
 // ssize_t read(int __fd,void *__buf,size_t __nbytes)
         00214980 f3 0f 1e fa     ENDBR64
@@ -1695,12 +1737,14 @@ see `libc_original.asm` for the original libc function (disassembled from ghidra
         00214abe 1f              ??         1Fh
         00214abf 00              ??         00h
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="wfw_before_asm"
     button-text="Show libc_original.asm" toggle-text=wfw_before_asm  %}
 		
 {% capture wfw_after_asm %}
+
 ```text
 0x7fca9f372980 <read>:     endbr64
 0x7fca9f372984 <read+4>:   mov    eax,DWORD PTR fs:0x18
@@ -1763,6 +1807,7 @@ see `libc_original.asm` for the original libc function (disassembled from ghidra
 0x7fca9f372a6d <write+77>: syscall 
 [...]
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="wfw_after_asm"
@@ -1772,6 +1817,7 @@ After overwriting the first return, I control the input to the read syscall to m
 
 `CTF{y0ur_3xpl0itati0n_p0w3r_1s_0v3r_9000!!}`
 {% capture wfw_solve3_py %}
+
 ```python
 from pwn import *
 import time
@@ -1866,6 +1912,7 @@ if __name__ == "__main__":
 
 #CTF{y0ur_3xpl0itati0n_p0w3r_1s_0v3r_9000!!}
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="wfw_solve3_py"

@@ -1,9 +1,9 @@
 ---
 title: HITCON CTF 2023 - Careless Padding
 tag:
-- CTF
-- My Challenge
-- Crypto
+  - CTF
+  - My Challenge
+  - Crypto
 ---
 
 # HITCON CTF 2023 - Careless Padding

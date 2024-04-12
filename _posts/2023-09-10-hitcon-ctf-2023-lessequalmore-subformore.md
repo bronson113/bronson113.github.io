@@ -1,10 +1,10 @@
 ---
 title: HITCON CTF 2023 - LessEQualmore / SUBformore
 tag:
-- CTF
-- My Challenge
-- Pwn
-- Rev
+  - CTF
+  - My Challenge
+  - Pwn
+  - Rev
 ---
 
 # HITCON CTF 2023 - LessEQualmore / SUBformore

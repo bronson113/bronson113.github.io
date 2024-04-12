@@ -1,22 +1,29 @@
 ---
 title: UIUCTF 2023 Writeups
 tag:
-- CTF
-- Writeup
-- Multiple
+  - CTF
+  - Writeup
+  - Pwn
+  - Crypto
+  - Reverse
+  - Web
 ---
-
 # UIUCTF 2023 Writeups
+
 ## Overview
+
 Last weekend, our *rival* Sigpwny hosted their UIUCTF. We ranked 24th in the end. I solved 6 crypto, 4 reverse, and 1 pwn. This post will go through some of my solves in details. Hopefully this can serve as a tutorial for simular challenges in the future.
 
-Challenge solved after the competition are marked as \[\*\] 
+Challenge solved after the competition are marked as \[*] 
 
 <!--more-->
 
 There will also be brief note on other challenge solved, though not as in depth.
+
 ## Crypto
+
 ### Three-Time Pad
+
 ```text
 We've been monitoring our adversaries' communication channels, but they encrypt their data with XOR one-time pads! However, we hear rumors that they're reusing the pads...
 
@@ -25,24 +32,25 @@ closed are three encrypted messages. Our mole overheard the plaintext of message
 Author: Pomona
 Solves: 390
 ```
+
 We are given three encrypted file and one plain text file. We also know that the file is encrypted using "one time pad" that's reused across the three file. First we need to understand what is one time pad.
 
 One time pad is a encryption method, which takes a key that's the same length as the plaintext, and xor the key with the plaintext. If the key is chosen at random, it is clear that one time pad is secure. In fact, it is proven to be perfectly secure (perfect secrecy). In this challenge, however, the key is shared across the three files. Why this is insecure then?
 
 We'll need to first understand the xor operation, xor stands for exclusive xor, so the output will be true if and only if one of the two input is true. Below is the truth table of the xor operation between two bits:
 
-
 | $a$ | $b$ | $a \oplus b$ |
-| -------- | -------- | -------- |
-| 0    | 0     | 0     |
-| 0    | 1     | 1     |
-| 1    | 0     | 1     |
-| 1    | 1     | 0     |
+| --- | --- | ------------ |
+| 0   | 0   | 0            |
+| 0   | 1   | 1            |
+| 1   | 0   | 1            |
+| 1   | 1   | 0            |
 
 Here we can make three observations:
+
 1. ($a \oplus a = 0$): If we look at the first and the last row, we can notice that if a and b are the same, the output will always be zero. This is reasonable, if we have two copy of the same time, they'll always both be true or both be false, so they'll never disagree with each other.
-2.  ($ a \oplus 0 = a$): If we look at the case where b is 0, we can observe that the output is the same as a. This is also reasonable, if we fix one of the two iteam to be false, then the other one can fully control the output.
-3.  ($ a \oplus b = b \oplus a$): Lets try to swap a and b in the table, we'll notice that the output is still the same. This is natural as the original definition doesn't have and ordering between the two items. 
+2. ($ a \oplus 0 = a$): If we look at the case where b is 0, we can observe that the output is the same as a. This is also reasonable, if we fix one of the two iteam to be false, then the other one can fully control the output.
+3. ($ a \oplus b = b \oplus a$): Lets try to swap a and b in the table, we'll notice that the output is still the same. This is natural as the original definition doesn't have and ordering between the two items. 
 
 Now that we have this property, what can be learn?
 
@@ -53,14 +61,15 @@ $$\mathtt{plaintext} \oplus \mathtt{key} = \mathtt{ciphertext}$$
 What if we xor both side with a plaintext?
 
 $$\begin{align}
-\mathtt{plaintext} \oplus \mathtt{key} \oplus \mathtt{plaintext} &= \mathtt{ciphertext} \oplus \mathtt{plaintext} \\ 
-\mathtt{plaintext} \oplus \mathtt{plaintext}  \oplus \mathtt{key} &= \mathtt{ciphertext} \oplus \mathtt{plaintext} \qquad (3.) \\ 
-0 \oplus \mathtt{key} &= \mathtt{ciphertext} \oplus \mathtt{plaintext}  \qquad (1.)\\ 
-\mathtt{key} &= \mathtt{ciphertext} \oplus \mathtt{plaintext} \qquad (2.) \\ 
+\mathtt{plaintext} \oplus \mathtt{key} \oplus \mathtt{plaintext} &= \mathtt{ciphertext} \oplus \mathtt{plaintext} \ 
+\mathtt{plaintext} \oplus \mathtt{plaintext}  \oplus \mathtt{key} &= \mathtt{ciphertext} \oplus \mathtt{plaintext} \qquad (3.) \ 
+0 \oplus \mathtt{key} &= \mathtt{ciphertext} \oplus \mathtt{plaintext}  \qquad (1.)\ 
+\mathtt{key} &= \mathtt{ciphertext} \oplus \mathtt{plaintext} \qquad (2.) \ 
 \end{align}$$
 
 Wow, if we xor the ciphertext with the plaintext, we can recover the key! Let's do that with the plaintext file we have, then try to decrypt the other two files.
-```python 
+
+```python
 def xor(b1, b2):
     return bytes([i^j for (i, j) in zip(b1, b2)])
 		
@@ -69,21 +78,25 @@ print(key)
 print(xor(key, open("c1","rb").read()))
 print(xor(key, open("c3","rb").read()))
 ```
+
 ```text
 three-time-pad$ python solve.py
 b'v\x90\x9f48@\t+\xc7\xc3\x81\x02\xa2\xac_\xf1\xcf!\x0c\x0c\xd8Y\x17\x9dr%\x80z\xb8\x84\xbf\x8d\xe6~\xe7\xfb\xd8\xac\xc22y\xb0!s\xae\x17\tc\x0e'
 b'before computers, one-time pads were sometimes'
 b'uiuctf{burn_3ach_k3y_aft3r_us1ng_1t}'
 ```
+
 Heyy there's the flag! `uiuctf{burn_3ach_k3y_aft3r_us1ng_1t}`
 
 ### At Home
+
 ```text
 Mom said we had food at home
 
 Author: Anakin
 Solves: 316
 ```
+
 ```python
 from Crypto.Util.number import getRandomNBitInteger
 
@@ -110,8 +123,8 @@ print(f"{c = }")
 In this challenge, c is calculated from `flag * e % n`. To solve this challenge, we can simply divide both side by e (or multiply by the inverse element).
 
 $$\begin{align}
-c &\equiv flag \times e &\mod{n}\\ 
-c \times e^{-1} &\equiv flag \times e \times e^{-1} &\mod{n}\\ 
+c &\equiv flag \times e &\mod{n}\ 
+c \times e^{-1} &\equiv flag \times e \times e^{-1} &\mod{n}\ 
 c \times e^{-1} &\equiv flag &\mod{n}
 \end{align}$$
 
@@ -141,7 +154,8 @@ Type "help", "copyright", "credits" or "license" for more information.
 1
 ```
 
-Clearly the gcd is 1, so Bézout's identity applies. Now we just need to find a and b respectively. One such method is by using the [Extended Euclidean algorithm]( https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm). But python actually provides a easy method to calculate the modular inverse of a number, using the default power function `pow(e, -1, n)` (I belive this is only is python 3.8+. The full solve script is as follows
+Clearly the gcd is 1, so Bézout's identity applies. Now we just need to find a and b respectively. One such method is by using the [Extended Euclidean algorithm](https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm). But python actually provides a easy method to calculate the modular inverse of a number, using the default power function `pow(e, -1, n)` (I belive this is only is python 3.8+. The full solve script is as follows
+
 ```python
 from Crypto.Util.number import long_to_bytes
 e = 359050389152821553416139581503505347057925208560451864426634100333116560422313639260283981496824920089789497818520105189684311823250795520058111763310428202654439351922361722731557743640799254622423104811120692862884666323623693713
@@ -152,8 +166,11 @@ inve = pow(e, -1, n)
 flag = (inve*c)%n
 print(long_to_bytes(flag))
 ```
+
 And that gives us the flag! `uiuctf{W3_hav3_R5A_@_h0m3}`
+
 ### Group Project(ion)
+
 ```text
 Group Project
 In any good project, you split the work into smaller tasks...
@@ -170,6 +187,7 @@ Solves: 232 (ver1)/ 127 (ver2)
 ```
 
 {% capture project_chal_py %}
+
 ```python
 from Crypto.Util.number import getPrime, long_to_bytes
 from random import randint
@@ -218,6 +236,7 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+
 {% endcapture %}
 {% include widgets/toggle-field.html toggle-name="project_chal_py" button-text="Show chal.py" toggle-text=project_chal_py %}
 
@@ -227,7 +246,7 @@ There are different approaches. One initial idea might be to let $c = 0$. This w
 
 First, we'll need some background on [Fermat's little theorem](https://en.wikipedia.org/wiki/Fermat%27s_little_theorem). 
 
-| Fermat's little theorem states that if p is a prime number, then for any integer a, the number a $a^{p}-a$ is an integer multiple of p. In the notation of modular arithmetic, this is expressed as  $a^{p} \equiv a \mod{p}$, 
+\| Fermat's little theorem states that if p is a prime number, then for any integer a, the number a $a^{p}-a$ is an integer multiple of p. In the notation of modular arithmetic, this is expressed as  $a^{p} \equiv a \mod{p}$, 
 
 In other words
 
@@ -292,6 +311,7 @@ if __name__ == "__main__":
 ```
 
 ### Morphing Time
+
 ```text
 The all revealing Oracle may be revealing a little too much...
 
@@ -302,6 +322,7 @@ Solves: 140
 ```
 
 {% capture morphing_chal_py %}
+
 ```python
 #!/usr/bin/env python3
 from Crypto.Util.number import getPrime
@@ -395,6 +416,7 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+
 {% endcapture %}
 {% include widgets/toggle-field.html toggle-name="morphing_chal_py" button-text="Show chal.py" toggle-text=morphing_chal_py %}
 
@@ -404,10 +426,10 @@ To encrypt a message, the sender first choose a random number $k$. The sender th
 
 $$
 \begin{align}
-c_2 &\equiv m \times (g^{a})^{k} &\mod{p}\\ 
-c_2 &\equiv m \times g^{ak} &\mod{p}\\ 
-c_2 &\equiv m \times (g^{k})^{a} &\mod{p}\\ 
-c_2 &\equiv m \times c_{1}^{a} &\mod{p}\\ 
+c*2 &\equiv m \times (g^{a})^{k} &\mod{p}\ 
+c_2 &\equiv m \times g^{ak} &\mod{p}\ 
+c_2 &\equiv m \times (g^{k})^{a} &\mod{p}\ 
+c_2 &\equiv m \times c*{1}^{a} &\mod{p}\ 
 \end{align}
 $$
 
@@ -417,20 +439,20 @@ Now what's the attack here? Notice the random number $k$, what would happen if w
 
 $$
 \begin{align}
-c_1' &\equiv g^{k'} &\mod{p}\\ 
-&\equiv g^{k+1} &\mod{p}\\ 
-&\equiv g^{k}\times g &\mod{p}\\ 
-&\equiv c_1 \times g &\mod{p}\\ 
-\\ 
-c_2' &\equiv m \times A^{k'} &\mod{p}\\ 
-&\equiv m \times A^{k+1} &\mod{p}\\ 
-&\equiv m \times A^{k} \times A &\mod{p}\\ 
-&\equiv c_2 \times A &\mod{p}\\ 
+c_1' &\equiv g^{k'} &\mod{p}\ 
+&\equiv g^{k+1} &\mod{p}\ 
+&\equiv g^{k}\times g &\mod{p}\ 
+&\equiv c_1 \times g &\mod{p}\ 
+\ 
+c_2' &\equiv m \times A^{k'} &\mod{p}\ 
+&\equiv m \times A^{k+1} &\mod{p}\ 
+&\equiv m \times A^{k} \times A &\mod{p}\ 
+&\equiv c_2 \times A &\mod{p}\ 
 \end{align}$$
 
 Which is a different, equally valid, encryption of the original message. This property is call homomorphism. In this case, we learn that elgamal is homomorphic under multiplication. Hence the name morphing time. 
 
-To solve this challenge, if we submit (g, A) as (c1_, c2_), the server will decrypt the flag for us, and we simply need to convert that back to bytes. 
+To solve this challenge, if we submit (g, A) as (c1*, c2*), the server will decrypt the flag for us, and we simply need to convert that back to bytes. 
 
 flag: `uiuctf{h0m0m0rpi5sms_ar3_v3ry_fun!!11!!11!!}`
 
@@ -465,7 +487,9 @@ print(long_to_bytes(m))
 ```
 
 ### Crack The Safe
+
 #### Overview
+
 ```text
 I found this safe, but something about it seems a bit off - can you crack it?
 
@@ -485,6 +509,7 @@ def crack_safe(key):
 
 assert crack_safe(key) and AES.new(key,AES.MODE_ECB).decrypt(ct) == FLAG
 ```
+
 This is a really short challenge and not a lot of code to read through. Essentially we need to solve the discrete log problem to find the key such that 
 
 $$7^{key} \equiv \mathtt{0x49545b7d5204bd639e299bc265ca987fb4b949c461b33759} \mod{p}$$
@@ -493,7 +518,7 @@ We can first verify that p is a prime number. Typically, DLP under finite field 
 
 $$
 \begin{align}
-&4170887899225220949299992515778389605737976266979828742347 \\ 
+&4170887899225220949299992515778389605737976266979828742347 \ 
 &= 2 \times 19 \times 151 \times 577 \times 67061 \times 18279232319 \times  11154337669 \times 9213409941746658353293481
 \end{align}
 $$
@@ -501,33 +526,37 @@ $$
 Even the largest factor, 9213409941746658353293481, is only 83 bits long. This calls for a Pohlig-Hellman attack. 
 
 #### Pohlig-Hellman Attack
+
 What is a Pohlig-Hellman Attack though? According to [Wikipedia](https://en.wikipedia.org/wiki/Pohlig%E2%80%93Hellman_algorithm), it is a way to break down a large DLP problem into multiple smaller sub-problems, then combine the result using chinese reminder theorm (CRT). The rough idea is as follows. Given a group $\mathbb{G}$ with order $p$, where $p$ is not a prime, and we want to find $x$ such that $g^x = k$ 
+
 1. We know that after $p$ operation, the cycle loop back to itself. i.e. $k^p = 1$ for any k.
 2. Let's take a factor $e$ and let $t = p/e$, if we pre-compute $g_0 = g^t$, then we know $g_0^e = 1$ as $t \times e = p$ 
 3. This tells us that $g_0$ actually forms a smaller group with group order $e$. If we transfor g and k into element of this smaller group, it will be easier to find the solution. This solution is of course incomplete, but we will gain some information related to x.
 4. In particular, the tranformation takes $g_0 = g^t$ and $k_0 = k^t$, and solve for the equation $g_0^{x_0} = k_0$, we can observe the following equation.
 
-	$$\begin{align}
-	g^x &= k \\  
-	(g^x)^t &= k^t \\  
-	g_0^{x_0} = (g^t)^{x_0} &= k^t \\ 
-	xt &\equiv tx_0 \mod{p}\\ 
-	x &\equiv x_0  \mod{\frac{p}{t}} \qquad \because t \vert p \ ^{*1}  \\   
-	x &\equiv x_0  \mod{e} \\ 
-	\end{align}$$
-	
-	\*1: Note that I'm not sure if this holds, but it make sense =D
+   $$\begin{align}
+   g^x &= k \
+   (g^x)^t &= k^t \
+   g_0^{x_0} = (g^t)^{x_0} &= k^t \ 
+   xt &\equiv tx_0 \mod{p}\ 
+   x &\equiv x_0  \mod{\frac{p}{t}} \qquad \because t \vert p \ ^{*1}  \
+   x &\equiv x_0  \mod{e} \ 
+   \end{align}$$
 
+   \*1: Note that I'm not sure if this holds, but it make sense =D
 5. After we gather all the reminder from the various factors, we can use CRT to reconstruct $x$ from all the $x_0$
 
 When I'm initially learning a bout pohlig-hellman attack, [this blog](https://l0z1k.com/pohlig_hellman_attack) that applies this attack on elliptic curve cryptography helped me a lot. I get to understand how the attack works more intuiatively. If you want more detailed description on the attack, this will be a great resource along with the wiki page. 
+
 #### Cado-nfs
+
 Even though we can split the problem down into small chunks, we still need to deal with each smaller pieces. All the factors except the last one is relatively easy to tackle, as the built in sage discrete log function solves them quite easily. The last one is still problematic though. From some previous experience (i.e. GoogleCTF2023 - cursved), I know that cado-nfs is a good tool for solving dlp of size less than around 250 bits. I need to search around a little bit and found [the official cado-nfs repo](https://github.com/cado-nfs/cado-nfs). Just follow the steps to install it. 
 
 Reading the user manual, we learn that the --dlp option allows us to find the discrete log of a number, but to a "random" base $b$, so $b^{x} \equiv a \mod b$. That's totally fine, as we can do a change of base algorithm to switch to any log base. 
 $log_a(b) = log_c(b) / log_c(a)$
 
 To use cado-nfs, we will first need to know that number we need to take the discrete log with. A short python script gives as the value.
+
 ```
 p = 4170887899225220949299992515778389605737976266979828742347
 k = 0x49545b7d5204bd639e299bc265ca987fb4b949c461b33759
@@ -544,6 +573,7 @@ print(pow(k, t, p))
 ```
 
 Then we run the following commands:
+
 ```
 crack_the_safe$ cado-nfs.py -dlp -ell 9213409941746658353293481 target=2874921958440504604797627466936335381864476070281841795223 4170887899225220949299992515778389605737976266979828742347
 [...]
@@ -563,14 +593,15 @@ Info:root: target = 243520888574004127020636437512040223299982667282493152276
 Info:root: log(target) = 1607529382666405025125600 mod ell
 1607529382666405025125600
 ```
-From the output we know the base is 6897002\[...\]9892313, and the log is 8483029440103488262728827 and 1607529382666405025125600 respectively. Now we just plug in the value, do CRT with the rest of the result, and we recover the flag.
+
+From the output we know the base is 6897002\[...]9892313, and the log is 8483029440103488262728827 and 1607529382666405025125600 respectively. Now we just plug in the value, do CRT with the rest of the result, and we recover the flag.
 
 `uiuctf{Dl0g_w/__UnS4F3__pR1Me5_}`
 
 \*\* Note that from the output above, we can see that the total time elapses for the two command is around 124.6 seconds, or around 2 minute. I'm running this on a basic 11th gen i7 laptop, which is relatively low computing power I'd say. So it's not exactly fast, but reasonable for most computer. I think most computer can compute DLP using cado-nfs way faster than mine.
 
-
 {% capture safe_cracker_py %}
+
 ```python
 from Crypto.Util.number import long_to_bytes, bytes_to_long
 from Crypto.Cipher import AES
@@ -614,12 +645,15 @@ assert(int(pow(7, key, p)) == k)
 print(AES.new(long_to_bytes(int(key)),AES.MODE_ECB).decrypt(ct))
 
 #uiuctf{Dl0g_w/__UnS4F3__pR1Me5_}
-
 ```
+
 {% endcapture %}
 {% include widgets/toggle-field.html toggle-name="safe_cracker_py" button-text="Show solve.sage" toggle-text=safe_cracker_py %}
+
 ## Reversing
+
 ### Fast Calculator
+
 ```text
 Check out our new super fast calculator!
 
@@ -630,6 +664,7 @@ Solves: 36
 ```
 
 We are given a binary. After running it, it seems like the program is a simple calculator. 
+
 ```
 fast_calc$ ./calc
 Welcome to the fastest, most optimized calculator ever!
@@ -651,6 +686,7 @@ Enter your operation:
 ```
 
 Obviously we will not be able to guess the correctly operation, so let's start decompiling the program. After looking at the code in ghidra, we get the rough pseudo code of the program as follow.
+
 ```
 def main():
 	flag = some_initial_flag_state
@@ -664,6 +700,7 @@ def main():
 ```
 
 Now we know the secret value, we can create an equation that result in that, like 8573.8567 + 0, and that should give us the flag, right? Running the program with that input gives us the following output.
+
 ```
 fast_calc$ ./calc
 Welcome to the fastest, most optimized calculator ever!
@@ -688,7 +725,9 @@ uiuctf{This is a fake flag. You are too fast!}
 
 Enter your operation:
 ```
+
 Clearly there's something wrong, but where? If we look into the guantlet function, this is the pseudo code:
+
 ```
 char gauntlet(int param_1)
 
@@ -703,7 +742,9 @@ char gauntlet(int param_1)
   return 1;
 }
 ```
+
 But if we look into the isNotNumber function and the isInfinity function, they are both empty:
+
 ```
 char isNotNumber(void)
 {
@@ -714,6 +755,7 @@ char isInfinity(void)
   return 0;
 }
 ```
+
 Seems like when the program is compiled, these checks are optimized out. What we can do now is to re-implement those checks outselves, or extract the equations and do the comprisons with the correct checks. I choose to hook gdb to printout the result of each equations and extract the bits from there. The initial state of the flag can be gathered statically from ghidra.
 
 Using gdb, we can set break points at the start of the guantlet function, and gather the result of each calculation. I print out the rax register, which is indirectly used to pass the argument into the guantlet function (The series of mov rax, xmm0). Since I use gef-gdb, I disabled the context output so the display function shows up.  With those set up, I just let the program run, enter the equation `8573.8567 + 0`, and press continue a bunch of time to gather the output from gdb. I then do some string processing to determine if the result fits the gauntlet function criteria, and reconstruct the key bit strings from there. 
@@ -725,6 +767,7 @@ During the after competition Q&A section, we learn that this discrepancy is caus
 Anyway, after recovering the results of the calculations, we can recover the correct flag: `uiuctf{n0t_So_f45t_w1th_0bscur3_b1ts_of_MaThs}`
 
 {% capture fast_math_solve %}
+
 ```python
 from Crypto.Util.number import long_to_bytes
 from pwn import xor, u64
@@ -1125,11 +1168,14 @@ key = long_to_bytes(int(gauntlet_result_bits, 2))
 print(xor(flag_init_bytes, key))
 #uiuctf{n0t_So_f45t_w1th_0bscur3_b1ts_of_MaThs}
 ```
+
 {% endcapture %}
 {% include widgets/toggle-field.html toggle-name="fast_math_solve" button-text="Show solve.py" toggle-text=fast_math_solve %}
 
 ## Pwn
+
 ### Chainmail
+
 ```text
 I've come up with a winning idea to make it big in the Prodigy and Hotmail scenes (or at least make your email widespread)!
 
@@ -1138,7 +1184,9 @@ nc chainmail.chal.uiuc.tf 1337
 Author: Emma
 Solves: 256
 ```
+
 {% capture chainmail_c %}
+
 ```c
 #include <stdio.h>
 #include <stdlib.h>
@@ -1171,6 +1219,7 @@ int main(int argc, char **argv) {
     return 0;
 }
 ```
+
 {% endcapture %}
 {% include widgets/toggle-field.html toggle-name="chainmail_c" button-text="Show chal.c" toggle-text=chainmail_c %}
 
@@ -1206,6 +1255,7 @@ chainmail$ checksec ./chal
 Seems like only NX is enabled, which stands for Not-eXecutable stack. Since there is a function that print out the flag for us, this doesn't matter for us. All we need to do is to redirect the control flow to the start of this function and it will give us the flag. If you want to learn more detail stack buffer overflow and how the function redirection works, [this video by LiveOverflow](https://youtu.be/8QzOC8HfOqU) is a great learning resource. Personally I learn a lot of the fundamentals from [his playlist](https://www.youtube.com/playlist?list=PLhixgUqwRTjxglIswKp9mpkfPNfHkzyeN) as well. 
 
 There are a lot of methods to find the location of give_flag, like opening in ghidra or use cli tools like readelf
+
 ```bash
 chainmail$ readelf -s ./chal|grep give_flag
     27: 0000000000401216   114 FUNC    GLOBAL DEFAULT   15 give_flag
@@ -1215,7 +1265,7 @@ From this we can craft a payload: 64 `a`s to fill the buffer, another 8  `a` as 
 
 If we send this payload, you'll notice that it didn't work, if we check with gdb you'll notice that it segfault at some location. This is caused by stack alignment. In [x86-64 abi convention](https://learn.microsoft.com/en-us/cpp/build/stack-usage?view=msvc-170#stack-allocation), it requires the caller to maintain a 16 byte stack alignment. Quoted:
 
-| The stack will always be maintained 16-byte aligned, except within the prolog (for example, after the return address is pushed), and except where indicated in Function Types for a certain class of frame functions.
+\| The stack will always be maintained 16-byte aligned, except within the prolog (for example, after the return address is pushed), and except where indicated in Function Types for a certain class of frame functions.
 
 But when we are calling the give_flag function, the stack actually isn't aligned. This cause some libc function to freak out and break. 
 
@@ -1239,7 +1289,9 @@ uiuctf{y0ur3_4_B1g_5h0t_n0w!11!!1!!!11!!!!1}
 ```
 
 ## Web
-### Future Disk 1/2 [*]
+
+### Future Disk 1/2 \[*]
+
 #### Overview
 
 ```text
@@ -1265,12 +1317,15 @@ https://futuredisk2-web.chal.uiuc.tf/haystack2.bin.gz
 Author: kuilin
 Solves: 22 (Ver 1)/ 8 (Ver 2)
 ```
+
 **Disclaimer**: I only solve this challenge (both version) after the competition. In the final solve, I already know that block alignment can be used for binary serach, and I know the block size pattern for part 2. 
 
 In this challenge, we see that the flag is placed in a gigantic file, compressed, then placed on a file server for us to download. But how are we suppose to download this file? Even if we have the storage, there's no way we can recieve the file through the network. Clearly with this large of the file, we must have some way to efficiently search through it or to get a index of the flag by inspecting a known part of the file. 
 
-#### Observation 
+#### Observation
+
 But first, we need to know what primitives we have. Let's start with a basic recon. I start with curl with `-v` flag to get more information. 
+
 ```
 futuredisk$ curl -v -N https://futuredisk-web.chal.uiuc.tf/haystack.bin.gz --output - > /dev/null
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
@@ -1295,11 +1350,13 @@ futuredisk$ curl -v -N https://futuredisk-web.chal.uiuc.tf/haystack.bin.gz --out
 { [5 bytes data]
   0 8191P    0  3813    0     0   2662      0 40102175  0:00:01 40102175  2664^C
 ```
+
 From the trace, we can see that the full file will be 9223372036854775807 bytes, so yeah it's impossible to get the full thing.
 
 After some digging, I found the `--continued-at` argument to curl, which allow a user to start downloading from some offset. Looking at the log again, I notice that this is made possible by sending the `range` header. For example, if we include `range: bytes=1-10`, the server will only send bytes from byte 1 to 10. This basically allow the sender to decide what range of bytes the user wants to download from. More information about the range header can be found [here](https://http.dev/range)
 
 To utilized this, I wrote a helper function using python's requests library. This will be used later.
+
 ```
 # helper function to get bytes of certain range
 # using the range header
@@ -1309,10 +1366,13 @@ def get_range(st, ed):
     res = requests.get(url, headers=headers)
     return res._content # return raw bytes
 ```
+
 #### File Strucutre
+
 Now let's inspect the actual file itself, well only part of it of course. We know that the file is compressed using gzip, maybe we can start by looking into the format for that. While searching up the header format, I found [this website](https://commandlinefanatic.com/cgi-bin/showarticle.cgi?article=art053) that goes into great detail in disecting a gzip file. This website is extremely helpful for me in understanding the file structure. We know that after the file header, the data is split into blocks, with each block having its own header and compression methods. I also found [this blog](https://pyokagan.name/blog/2019-10-18-zlibinflate/) that implements the deflate method in python so I can play around with it a little bit.
 
 After augmenting the inflate code, I get to look at the huffman tables / block sizes / inflated sizes and some other information related to each block. Using the start of each file, we can observe the block sizes of each block. 
+
 ```
 futuredisk$ decode.py haystack1.gz
 block 1: 193 bits
@@ -1334,11 +1394,15 @@ block 8: 116 bits
 ```
 
 #### Binary Search
+
 We can imaging the situation a little bit, lets say the flag is in the 10th block in a 20 block file. Since the file is mostly zero, we can assume the first 9 blocks will follow a pretty regular sequence. then there will be one block of a irregular size to store the flag, and the rest of the block back to the regular format. This means that if we can find the block header at the location we expects it, we haven't reach the block containing the flag. Conversely, if we can't find the block header, we have passed the flag block. The only challenge now is to calculate where the header bytes are.
+
 #### Index calculation
+
 For version 1, it's simple as all blocks have the same size, so it's a simple multiplication. For version 2, I'll describe how I would have discover the pattern myself.
 
 Firstly from the starting block, we know that after the first two block, it's a steadily increasing sequence from 106 bit, I'll just assume that this is the correct format and run the binary search with this formula. When it gets to the "flag" block, we can print out the following few blocks, and observe the pattern from there. For example, after the first block, the decrypted block size is as follow.
+
 ```
 futuredisk$ solve.py 
 [...]
@@ -1349,7 +1413,9 @@ block 32766: 108 bits
 block 32767: 110 bits
 block 32768: 112 bits
 ```
+
 And slowly the block size format can be discovered. The bit length format is as follow, where each number is a block.
+
 ```
 # 106 108 110 ... 65634
 #     108 110 ... 65634
@@ -1368,17 +1434,17 @@ And slowly the block size format can be discovered. The bit length format is as 
 #             ... 65634
 #                 65634
 ```
+
 Given this format, it's simple to come up with ways to calculate the block location with some math, I'll omit the details here, but the detail can be found in the solve script.
 
 After that, combined with our primitive, we can query for the flag location using binary search, and get the flag in the end.
-
 
 Version1: `uiuctf{binary search means searching a binary stream, right :D}`
 
 Version2: `uiuctf{i sincerely hope that was not too contrived, deflate streams are cool}`
 
-
 {% capture future_disk_solve %}
+
 ```py
 # deflate taken from https://pyokagan.name/blog/2019-10-18-zlibinflate/
 # modified to print out bit count of each block
@@ -1497,5 +1563,6 @@ print(flag_inflated)
 # VER 2
 #uiuctf{i sincerely hope that was not too contrived, deflate streams are cool}
 ```
+
 {% endcapture %}
 {% include widgets/toggle-field.html toggle-name="future_disk_solve" button-text="Show solve.py" toggle-text=future_disk_solve %}

@@ -1,9 +1,9 @@
 ---
 title: TetCTF 2022 - Ezflag
 tag:
-- CTF
-- Writeup
-- Pwn
+  - CTF
+  - Writeup
+  - Pwn
 ---
 
 # TetCTF 2022 - Ezflag

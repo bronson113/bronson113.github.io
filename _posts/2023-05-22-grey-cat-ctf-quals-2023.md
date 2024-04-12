@@ -1,22 +1,26 @@
 ---
 title: Greycat CTF Quals 2023 Writeup
 tag:
-- CTF
-- Writeup
-- Multiple
+  - CTF
+  - Writeup
+  - Crypto
+  - Pwn
 ---
-
 # Greycat CTF Quals 2023 Writeup
+
 ## Overview
+
 Last weekend, I participated in Grey Cat CTF Qual 2023 with b01lers. We ranked 22nd overall. I think the challenges are interesting and decided to post writeups on the challenges I solved.
 I solved 6 crypto and 1 pwn (with help from teammate) during the competition.
 
-Challenge solved after the competition are marked as \[\*\] 
+Challenge solved after the competition are marked as \[*] 
 
 <!--more-->
 
----
+- - -
+
 ## The Vault
+
 ```text
 Can you break into a double-encrypted vault?
 
@@ -29,6 +33,7 @@ solves: 100/454
 We are given chall.py.
 
 {% capture vault_chal_py %}
+
 ```python
 from hashlib import sha256
 from Crypto.Util.number import long_to_bytes
@@ -76,6 +81,7 @@ if thief_check == encryption(first_key, encryption(second_key, thief_check)):
 else:
     print("Stealing attempts detected! Initializing lockdown")
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="vault_chal_py"
@@ -98,6 +104,7 @@ One method is to simply make $a \equiv 1 \mod{n}$, since there is no bounding ch
 The other way is to utilize [eular's theorm](https://en.wikipedia.org/wiki/Euler%27s_theorem), which states $x^{\phi({n})} \equiv 1 \mod(n)$. By setting $b = \phi({n})$ and supply a sufficiently large a, we can solve the challenge.
 
 {% capture vault_solve_py %}
+
 ```python
 from Crypto.Util.number import long_to_bytes, bytes_to_long
 from sage.all import *
@@ -113,13 +120,17 @@ p.sendline(str(10))
 p.interactive()
 #grey{th3_4n5w3R_T0_Th3_3x4M_4nD_3v3ry7H1N6_1s_42}
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="vault_solve_py"
     button-text="Show solve.py" toggle-text=vault_solve_py %}
 	
----
+
+- - -
+
 ## Greycat Trial
+
 ```text
 In the sacred realm of GreyCat, amidst the swirling mists of arcane power, a momentous trial unfolds, seeking the one destined to bear the mantle of the next mighty GreyCat wizard.
 
@@ -130,6 +141,7 @@ solves: 63/454
 ```
 
 {% capture trial_chal_py %}
+
 ```python
 from random import randint
 
@@ -173,6 +185,7 @@ if (d.bit_length() < 55):
 else:
     print("Thou art nigh, but thy power falters still.")
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="trial_chal_py"
@@ -187,9 +200,10 @@ $5749146449311 + 26004868890n$
 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5969533133056, 1942548458790, 3086279453216, 1, 774068330828]
 ```
 
-Now notice that in the trial, the trial numbers are randomly chosen, so we don't need to perfectly pass every test. With the example from wikipedia, 22 out of 26 numbers will pass the primality test, which gives us a $({22}/{26})^{26} \approx 1.3\%$ chance of passing the trail every single time. With enough trys, the odd will stand in our favor. (On average 76 trys will be needed).
+Now notice that in the trial, the trial numbers are randomly chosen, so we don't need to perfectly pass every test. With the example from wikipedia, 22 out of 26 numbers will pass the primality test, which gives us a $({22}/{26})^{26} \approx 1.3%$ chance of passing the trail every single time. With enough trys, the odd will stand in our favor. (On average 76 trys will be needed).
 
 {% capture trial_solve_py %}
+
 ```python
 from Crypto.Util.number import long_to_bytes, bytes_to_long
 from sage.all import *
@@ -211,14 +225,16 @@ for i in range(10000):
         break
 #grey{Gr33N-tA0_The0ReM_w1z4rd}
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="trial_solve_py"
     button-text="Show solve.py" toggle-text=trial_solve_py %}
 
+- - -
 
----
 ## OT
+
 ```text
 Oblivious Transfer is amazing :D
 
@@ -227,7 +243,9 @@ Oblivious Transfer is amazing :D
 nc 34.124.157.94 10521 
 solves: 41/454
 ```
+
 {% capture ot_chal_py %}
+
 ```python
 import secrets
 import hashlib
@@ -277,6 +295,7 @@ print("This protocol is secure so sending this should not have any problem")
 print(f"flag = {encrypt(k, FLAG).hex()}")
 print("Bye bye!")
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="ot_chal_py"
@@ -287,6 +306,7 @@ Since we need to decode both rsa encryption, we'll need to know the factorizatio
 The way I construct the number is by building up primes from 2, then bruteforce the last prime so that k+1 is a prime. With that, we have the factorization of both N and N+23. Simply by calculating the phi and decrypt the rsa in both cases, and decrypt the flag using the same function, we can recover the flag.
 
 {% capture ot_solve_py %}
+
 ```python
 from Crypto.Util.number import long_to_bytes, bytes_to_long
 from Crypto.Util.number import isPrime
@@ -358,13 +378,17 @@ def decrypt(key, msg):
 print(decrypt(k, flag))
 #grey{waitttt_I_thought_factorization_is_hard!!?_bSug9kksE3W9SrPL}
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="ot_solve_py"
     button-text="Show solve.py" toggle-text=ot_solve_py %}
 		
----
+
+- - -
+
 ## PLCG
+
 ```text
 Add some probability to spice up the game
 
@@ -375,6 +399,7 @@ solves: 32/454
 ```
 
 {% capture plcg_chal_py %}
+
 ```python
 #!/usr/bin/python3
 import secrets
@@ -421,6 +446,7 @@ if not (0 <= s <= 10):
 for i in range(s):
     print("Here's your lucky flag:", encrypt(FLAG).hex())
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="plcg_chal_py"
@@ -431,6 +457,7 @@ In this challenge, the key used to encrypt the flag is generated from a custom-m
 Assuming that the markov chain converges to stable sufficently fast, I simply apply the transformation matrix on a uniform distribution to see how skewed the output will be given the sample set. I them connect to the server multiple times until a set skewed enough is retrieved. After that, by bruteforcing the possible keys and attempting to decrypt the text gives us the flag.
 		
 {% capture plcg_brute_py %}
+
 ```python
 from Crypto.Util.number import long_to_bytes, bytes_to_long
 from pwn import *
@@ -463,12 +490,14 @@ for i in range(10):
 
 p.interactive()
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="plcg_brute_py"
     button-text="Show brute.py" toggle-text=plcg_brute_py %}
 
 {% capture plcg_solve_py %}
+
 ```python
 #!/usr/bin/python3
 import secrets
@@ -529,15 +558,17 @@ while True:
 #b'\x03\xf0\xf0PP\x03'
 #b'UX\xe8\x8f\xaa\xdb\xe6\x97\xd5\x0f\t\xcc\xd9\x8c\x10C\xaf\x0b\xf8\xa9\xe2\x0f]\xe6\r\xcd]\xff\x0by\xeb\xe9\xc9O\xf4<\x90\xf2J\xe2\xbf^\xa0`\xed=\n\xd9k3\t\xe2\xe0n\x1a '
 #b'grey{G3T_Rand0m_Byte-is_Still_Bi@s_Oof_7nwh8eQfV5e8eZwC}'
-
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="plcg_solve_py"
     button-text="Show solve.py" toggle-text=plcg_solve_py %}
 
----
+- - -
+
 ## Encrypted
+
 ```text
 Let's just do something simple
 
@@ -547,6 +578,7 @@ solves: 22/454
 ```
 
 {% capture encrypted_chal_py %}
+
 ```python
 from Crypto.Util.number import bytes_to_long
 from secrets import randbits
@@ -568,8 +600,8 @@ print(f'p = {p}')
 print(f'q = {q}')
 print(f'c1 = {encrypt(FLAG[:n//2], s)}')
 print(f'c2 = {encrypt(FLAG[n//2:], s)}')
-
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="encrypted_chal_py"
@@ -578,30 +610,30 @@ print(f'c2 = {encrypt(FLAG[n//2:], s)}')
 For this challenge, the encryption is as follow with $p$, $q$, $c_1$, $c_2$ given. 
 
 $$\begin{align}
-c_1 &= p \times m_1 + q \times m_1^{2} + (m_1+p+q) \times k  \\ 
-c_2 &= p \times m_2 + q \times m_2^{2} + (m_2+p+q) \times k  \\  
+c_1 &= p \times m_1 + q \times m_1^{2} + (m_1+p+q) \times k  \ 
+c_2 &= p \times m_2 + q \times m_2^{2} + (m_2+p+q) \times k  \\
 \end{align}$$
 
 I start by manipulating the equations around too see how can I simplify it. I know that we're trying to find a small root of the equation (m is significantly smaller than all other parameter) but I'm not sure what I can do. When I try to take mod q on the equation, I found the following relationship. (I'll focus on one copy
 
 $$\begin{align}
-c \equiv  p \times m + (m+p) \times k  &\mod{q}\\  
-c - p \times m \equiv  (m+p) \times k  &\mod{q}\\  
-(c - p \times m) \times (m+p)^{-1} \equiv  k &\mod{q}\\  
+c \equiv  p \times m + (m+p) \times k  &\mod{q}\\
+c - p \times m \equiv  (m+p) \times k  &\mod{q}\\
+(c - p \times m) \times (m+p)^{-1} \equiv  k &\mod{q}\\
 \end{align}$$
 
 By combining the two equations together.
 
 $$\begin{align}
-(c_1 - p \times m_1) \times (m_1+p)^{-1} &\equiv  k \equiv (c_2 - p \times m_2) \times (m_2+p)^{-1}   &\mod{q}\\  
-(c_1 - p \times m_1) \times (m_1+p)^{-1} &\equiv (c_2 - p \times m_2) \times (m_2+p)^{-1}   &\mod{q}\\  
-(c_1 - p \times m_1) \times (m_2+p) &\equiv (c_2 - p \times m_2) \times (m_1+p)  &\mod{q}\\  
+(c_1 - p \times m_1) \times (m_1+p)^{-1} &\equiv  k \equiv (c_2 - p \times m_2) \times (m_2+p)^{-1}   &\mod{q}\\
+(c_1 - p \times m_1) \times (m_1+p)^{-1} &\equiv (c_2 - p \times m_2) \times (m_2+p)^{-1}   &\mod{q}\\
+(c_1 - p \times m_1) \times (m_2+p) &\equiv (c_2 - p \times m_2) \times (m_1+p)  &\mod{q}\\
 \end{align}$$
 
 $$\begin{align} 
-(c_1 - p \times m_1) \times (m_2+p) - (c_2 - p \times m_2) \times (m_1+p)  &\equiv 0 \mod{q}\\ 
-p\times (c_1-c_2) + (c_1 m_2 - c_2 m_1) - p^{2} m_1 + p^{2} m_2 &\equiv 0 \mod{q}\\ 
-m_1 (c_2+p^{2}) - m_2 (c_1+p^{2}) - p (c_1 - c_2) &\equiv 0 \mod{q}\\ 
+(c_1 - p \times m_1) \times (m_2+p) - (c_2 - p \times m_2) \times (m_1+p)  &\equiv 0 \mod{q}\ 
+p\times (c_1-c_2) + (c_1 m_2 - c_2 m_1) - p^{2} m_1 + p^{2} m_2 &\equiv 0 \mod{q}\ 
+m_1 (c_2+p^{2}) - m_2 (c_1+p^{2}) - p (c_1 - c_2) &\equiv 0 \mod{q}\ 
 \end{align}$$
 
 After all the manipulation, we can get
@@ -610,22 +642,23 @@ $$m_1 (c_2+p^{2}) - m_2 (c_1+p^{2}) - p (c_1 - c_2) - Kq =  0$$
 
 We can using this relationship to form the following lattice.
 $$\begin{align} 
-m_1 (c_2+p^{2}) - m_2 (c_1+p^{2}) - p (c_1 - c_2) - Kq &=  0\\  
-m_1 &= m_1\\ 
-m_2 &= m_2 \\ 
-1 &= 1\\ 
+m_1 (c_2+p^{2}) - m_2 (c_1+p^{2}) - p (c_1 - c_2) - Kq &=  0\\
+m_1 &= m_1\ 
+m_2 &= m_2 \ 
+1 &= 1\ 
 \end{align}$$
 
-$$\begin{align} m_1  \begin{bmatrix}  c_2+p^{2} \\  1 \\ 0 \\ 0 \end{bmatrix}
-				 -m_2 \begin{bmatrix} c_1+p^{2} \\  0 \\  -1 \\  0 \\  \end{bmatrix}
-				 -\begin{bmatrix} p(c_1 - c_2) \\ 0 \\ 0 \\ -1 \end{bmatrix}
-				 - K \begin{bmatrix} q \\ 0 \\ 0 \\ 0 \end{bmatrix}
-				 =\begin{bmatrix} 0 \\ m_1 \\ m_2 \\ 1 \end {bmatrix}
+$$\begin{align} m_1  \begin{bmatrix}  c_2+p^{2} \  1 \ 0 \ 0 \end{bmatrix}
+				 -m_2 \begin{bmatrix} c_1+p^{2} \  0 \  -1 \  0 \  \end{bmatrix}
+				 -\begin{bmatrix} p(c_1 - c_2) \ 0 \ 0 \ -1 \end{bmatrix}
+				 - K \begin{bmatrix} q \ 0 \ 0 \ 0 \end{bmatrix}
+				 =\begin{bmatrix} 0 \ m_1 \ m_2 \ 1 \end {bmatrix}
 				 \end{align} $$
 
 To make the resulting vector balanced, we apply a weight matrixs so that LLL can better find the target vector we want. See the solve script for more detail.
 	
 {% capture encrypted_solve_sage %}
+
 ```python
 from Crypto.Util.number import long_to_bytes, bytes_to_long
 #from pwn import *
@@ -654,14 +687,16 @@ for col in Sol:
 
 #grey{shortest_crypto_challenge_in_this_ctf_srfrGRUEShP8FKwn}
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="encrypted_solve_sage"
     button-text="Show solve.sage" toggle-text=encrypted_solve_sage %}
 
+- - -
 
----
 ## QRSA
+
 ```text
 Questionable RSA
 
@@ -669,7 +704,9 @@ Questionable RSA
 
 solves: 17/454
 ```
+
 {% capture qrsa_chal_py %}
+
 ```python
 from Crypto.Util.number import bytes_to_long
 from secret import qa, qb, pa, pb
@@ -722,6 +759,7 @@ print(f"C_b = {c.b}")
 print(f"e = {e}")
 print(f"D = {Q.d}")
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="qrsa_chal_py"
@@ -734,6 +772,7 @@ In my solution, I first tried constructing phi by using the normal phi algorithm
 I still don't fully understand why this work. According to the author, the $\phi(N)$'s component will different based on how each prime factors are like. In case where the factor $p \in \mathbb{Z}$, $norm(p)$ will be $(p^2-1)\times(p^{2(k-1)})$ instead of the typical $p^{k}-p^{k-1}$. Therefore, in the solve script, the author took the lcm of the two cases to construct the phi. In my case, I assume that because my factor still covers a wide enough cases, so the phi works out the decrypt the flag.
 
 {% capture qrsa_solve_py %}
+
 ```python
 from Crypto.Util.number import long_to_bytes, bytes_to_long
 from sage.all import *
@@ -823,13 +862,16 @@ flag = long_to_bytes(res.a) + long_to_bytes(res.b)
 print(flag)
 # grey{x3VkGD3K2SK5s4JW_Lmao_why_do_RSA_in_quadratic_integer}
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="qrsa_solve_py"
     button-text="Show solve.sage" toggle-text=qrsa_solve_py %}
 
----
+- - -
+
 ## ROPV
+
 ```text
 Echo service again??????????
 
@@ -840,6 +882,7 @@ solves: 38/454
 ```
 
 We are given a binary file, upon basic inspections, we can observe that this is a riscv executable. File and checksec result is as follow.
+
 ```sh
 $ file ropv
 ropv: ELF 64-bit LSB executable, UCB RISC-V, version 1 (SYSV), statically linked, BuildID[sha1]=876741095749886c314618e6a23bd256072a721f, for GNU/Linux 4.15.0, not stripped
@@ -861,6 +904,7 @@ Some notable things I learn though this challenge is how to debug riscv binary o
 After the competition ended, someone linked [this writeup](https://github.com/nobodyisnobody/write-ups/tree/main/nullcon.HackIM.2022/pwn/typical.ROP), which indicated a universal rop gadget in riscv, which sets all a0~a7, needed for controlling syscall arguments. In this specific challenge binary, it is located in at 0x4281c. This would have been helpful during the competition, but it is still helpful information learned after the competition ended. Knowing this would have made the exploit development way easier.
 
 {% capture ropv_solve_py %}
+
 ```python
 from pwn import *
 import os
@@ -1014,9 +1058,10 @@ p.sendlineafter(b'Echo server: ', payload)
 p.interactive()
 #grey{riscv_risc5_ropv_rop5_b349340j935gj09}
 ```
+
 {% endcapture %}
 
 {% include widgets/toggle-field.html toggle-name="ropv_solve_py"
     button-text="Show exp.py" toggle-text=ropv_solve_py %}
 
----
+- - -

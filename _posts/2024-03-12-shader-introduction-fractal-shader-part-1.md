@@ -1,8 +1,8 @@
 ---
 title: Ray Marching Introduction - Floating Ghost
 tag:
-- Graphics
-- Shaders
+  - Graphics
+  - Shaders
 ---
 
 # Shader Introduction - Fractal Shader (Part 1 /???)

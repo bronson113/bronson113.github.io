@@ -17,9 +17,7 @@ This year I created 5 challenges for b01lersCTF, I hoped that everyone enjoyed t
 
 <!--more-->
 
-Without further ado, here are the writeups for my challenges. Source code for all of the challenges can be found [HERE](<>)!
-
-<!--TODO: add link to chal source-->
+Without further ado, here are the writeups for my challenges. Source code for all of the challenges can be found [HERE](https://github.com/bronson113/My_CTF_Challenges/tree/main/b01lersCTF2024)!
 
 ## Reverse
 

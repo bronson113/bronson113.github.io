@@ -61,10 +61,10 @@ $$\mathtt{plaintext} \oplus \mathtt{key} = \mathtt{ciphertext}$$
 What if we xor both side with a plaintext?
 
 $$\begin{align}
-\mathtt{plaintext} \oplus \mathtt{key} \oplus \mathtt{plaintext} &= \mathtt{ciphertext} \oplus \mathtt{plaintext} \ 
-\mathtt{plaintext} \oplus \mathtt{plaintext}  \oplus \mathtt{key} &= \mathtt{ciphertext} \oplus \mathtt{plaintext} \qquad (3.) \ 
-0 \oplus \mathtt{key} &= \mathtt{ciphertext} \oplus \mathtt{plaintext}  \qquad (1.)\ 
-\mathtt{key} &= \mathtt{ciphertext} \oplus \mathtt{plaintext} \qquad (2.) \ 
+\mathtt{plaintext} \oplus \mathtt{key} \oplus \mathtt{plaintext} &= \mathtt{ciphertext} \oplus \mathtt{plaintext} \\ 
+\mathtt{plaintext} \oplus \mathtt{plaintext}  \oplus \mathtt{key} &= \mathtt{ciphertext} \oplus \mathtt{plaintext} \qquad (3.) \\ 
+0 \oplus \mathtt{key} &= \mathtt{ciphertext} \oplus \mathtt{plaintext}  \qquad (1.)\\ 
+\mathtt{key} &= \mathtt{ciphertext} \oplus \mathtt{plaintext} \qquad (2.) \\ 
 \end{align}$$
 
 Wow, if we xor the ciphertext with the plaintext, we can recover the key! Let's do that with the plaintext file we have, then try to decrypt the other two files.
@@ -123,9 +123,9 @@ print(f"{c = }")
 In this challenge, c is calculated from `flag * e % n`. To solve this challenge, we can simply divide both side by e (or multiply by the inverse element).
 
 $$\begin{align}
-c &\equiv flag \times e &\mod{n}\ 
-c \times e^{-1} &\equiv flag \times e \times e^{-1} &\mod{n}\ 
-c \times e^{-1} &\equiv flag &\mod{n}
+c &\equiv flag \times e &\mod{n}\\ 
+c \times e^{-1} &\equiv flag \times e \times e^{-1} &\mod{n}\\ 
+c \times e^{-1} &\equiv flag &\mod{n}\\ 
 \end{align}$$
 
 Now the problem is now to find the inverse element of e? Well what an inverse element means is a number $e^{-1}$ such that
@@ -426,10 +426,10 @@ To encrypt a message, the sender first choose a random number $k$. The sender th
 
 $$
 \begin{align}
-c*2 &\equiv m \times (g^{a})^{k} &\mod{p}\ 
-c_2 &\equiv m \times g^{ak} &\mod{p}\ 
-c_2 &\equiv m \times (g^{k})^{a} &\mod{p}\ 
-c_2 &\equiv m \times c*{1}^{a} &\mod{p}\ 
+c_2 &\equiv m \times (g^{a})^{k} &\mod{p}\\ 
+c_2 &\equiv m \times g^{ak} &\mod{p}\\ 
+c_2 &\equiv m \times (g^{k})^{a} &\mod{p}\\ 
+c_2 &\equiv m \times c_{1}^{a} &\mod{p}\\ 
 \end{align}
 $$
 
@@ -439,20 +439,20 @@ Now what's the attack here? Notice the random number $k$, what would happen if w
 
 $$
 \begin{align}
-c_1' &\equiv g^{k'} &\mod{p}\ 
-&\equiv g^{k+1} &\mod{p}\ 
-&\equiv g^{k}\times g &\mod{p}\ 
-&\equiv c_1 \times g &\mod{p}\ 
-\ 
-c_2' &\equiv m \times A^{k'} &\mod{p}\ 
-&\equiv m \times A^{k+1} &\mod{p}\ 
-&\equiv m \times A^{k} \times A &\mod{p}\ 
-&\equiv c_2 \times A &\mod{p}\ 
+c_1' &\equiv g^{k'} &\mod{p}\\ 
+&\equiv g^{k+1} &\mod{p}\\ 
+&\equiv g^{k}\times g &\mod{p}\\ 
+&\equiv c_1 \times g &\mod{p}\\ 
+\\ 
+c_2' &\equiv m \times A^{k'} &\mod{p}\\ 
+&\equiv m \times A^{k+1} &\mod{p}\\ 
+&\equiv m \times A^{k} \times A &\mod{p}\\ 
+&\equiv c_2 \times A &\mod{p}\\ 
 \end{align}$$
 
 Which is a different, equally valid, encryption of the original message. This property is call homomorphism. In this case, we learn that elgamal is homomorphic under multiplication. Hence the name morphing time. 
 
-To solve this challenge, if we submit (g, A) as (c1*, c2*), the server will decrypt the flag for us, and we simply need to convert that back to bytes. 
+To solve this challenge, if we submit (g, A) as (c1\_, c2\_), the server will decrypt the flag for us, and we simply need to convert that back to bytes. 
 
 flag: `uiuctf{h0m0m0rpi5sms_ar3_v3ry_fun!!11!!11!!}`
 
@@ -518,8 +518,8 @@ We can first verify that p is a prime number. Typically, DLP under finite field 
 
 $$
 \begin{align}
-&4170887899225220949299992515778389605737976266979828742347 \ 
-&= 2 \times 19 \times 151 \times 577 \times 67061 \times 18279232319 \times  11154337669 \times 9213409941746658353293481
+&4170887899225220949299992515778389605737976266979828742347 \\ 
+&= 2 \times 19 \times 151 \times 577 \times 67061 \times 18279232319 \times  11154337669 \times 9213409941746658353293481 \\ 
 \end{align}
 $$
 
@@ -535,12 +535,12 @@ What is a Pohlig-Hellman Attack though? According to [Wikipedia](https://en.wiki
 4. In particular, the tranformation takes $g_0 = g^t$ and $k_0 = k^t$, and solve for the equation $g_0^{x_0} = k_0$, we can observe the following equation.
 
    $$\begin{align}
-   g^x &= k \
-   (g^x)^t &= k^t \
-   g_0^{x_0} = (g^t)^{x_0} &= k^t \ 
-   xt &\equiv tx_0 \mod{p}\ 
-   x &\equiv x_0  \mod{\frac{p}{t}} \qquad \because t \vert p \ ^{*1}  \
-   x &\equiv x_0  \mod{e} \ 
+   g^x &= k \\ 
+   (g^x)^t &= k^t \\
+   g_0^{x_0} = (g^t)^{x_0} &= k^t \\  
+   xt &\equiv tx_0 \mod{p}\\ 
+   x &\equiv x_0  \mod{\frac{p}{t}} \qquad \because t \vert p \ ^{*1}  \\
+   x &\equiv x_0  \mod{e} \\ 
    \end{align}$$
 
    \*1: Note that I'm not sure if this holds, but it make sense =D

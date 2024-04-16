@@ -200,7 +200,7 @@ $5749146449311 + 26004868890n$
 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 5969533133056, 1942548458790, 3086279453216, 1, 774068330828]
 ```
 
-Now notice that in the trial, the trial numbers are randomly chosen, so we don't need to perfectly pass every test. With the example from wikipedia, 22 out of 26 numbers will pass the primality test, which gives us a $({22}/{26})^{26} \approx 1.3%$ chance of passing the trail every single time. With enough trys, the odd will stand in our favor. (On average 76 trys will be needed).
+Now notice that in the trial, the trial numbers are randomly chosen, so we don't need to perfectly pass every test. With the example from wikipedia, 22 out of 26 numbers will pass the primality test, which gives us a $({22}/{26})^{26} \approx 1.3\%$ chance of passing the trail every single time. With enough trys, the odd will stand in our favor. (On average 76 trys will be needed).
 
 {% capture trial_solve_py %}
 
@@ -610,30 +610,30 @@ print(f'c2 = {encrypt(FLAG[n//2:], s)}')
 For this challenge, the encryption is as follow with $p$, $q$, $c_1$, $c_2$ given. 
 
 $$\begin{align}
-c_1 &= p \times m_1 + q \times m_1^{2} + (m_1+p+q) \times k  \ 
-c_2 &= p \times m_2 + q \times m_2^{2} + (m_2+p+q) \times k  \\
+c_1 &= p \times m_1 + q \times m_1^{2} + (m_1+p+q) \times k  \\ 
+c_2 &= p \times m_2 + q \times m_2^{2} + (m_2+p+q) \times k  \\ 
 \end{align}$$
 
 I start by manipulating the equations around too see how can I simplify it. I know that we're trying to find a small root of the equation (m is significantly smaller than all other parameter) but I'm not sure what I can do. When I try to take mod q on the equation, I found the following relationship. (I'll focus on one copy
 
 $$\begin{align}
-c \equiv  p \times m + (m+p) \times k  &\mod{q}\\
-c - p \times m \equiv  (m+p) \times k  &\mod{q}\\
-(c - p \times m) \times (m+p)^{-1} \equiv  k &\mod{q}\\
+c \equiv  p \times m + (m+p) \times k  &\mod{q}\\ 
+c - p \times m \equiv  (m+p) \times k  &\mod{q}\\ 
+(c - p \times m) \times (m+p)^{-1} \equiv  k &\mod{q}\\ 
 \end{align}$$
 
 By combining the two equations together.
 
 $$\begin{align}
-(c_1 - p \times m_1) \times (m_1+p)^{-1} &\equiv  k \equiv (c_2 - p \times m_2) \times (m_2+p)^{-1}   &\mod{q}\\
-(c_1 - p \times m_1) \times (m_1+p)^{-1} &\equiv (c_2 - p \times m_2) \times (m_2+p)^{-1}   &\mod{q}\\
-(c_1 - p \times m_1) \times (m_2+p) &\equiv (c_2 - p \times m_2) \times (m_1+p)  &\mod{q}\\
+(c_1 - p \times m_1) \times (m_1+p)^{-1} &\equiv  k \equiv (c_2 - p \times m_2) \times (m_2+p)^{-1}   &\mod{q}\\ 
+(c_1 - p \times m_1) \times (m_1+p)^{-1} &\equiv (c_2 - p \times m_2) \times (m_2+p)^{-1}   &\mod{q}\\ 
+(c_1 - p \times m_1) \times (m_2+p) &\equiv (c_2 - p \times m_2) \times (m_1+p)  &\mod{q}\\ 
 \end{align}$$
 
 $$\begin{align} 
-(c_1 - p \times m_1) \times (m_2+p) - (c_2 - p \times m_2) \times (m_1+p)  &\equiv 0 \mod{q}\ 
-p\times (c_1-c_2) + (c_1 m_2 - c_2 m_1) - p^{2} m_1 + p^{2} m_2 &\equiv 0 \mod{q}\ 
-m_1 (c_2+p^{2}) - m_2 (c_1+p^{2}) - p (c_1 - c_2) &\equiv 0 \mod{q}\ 
+(c_1 - p \times m_1) \times (m_2+p) - (c_2 - p \times m_2) \times (m_1+p)  &\equiv 0 \mod{q}\\ 
+p\times (c_1-c_2) + (c_1 m_2 - c_2 m_1) - p^{2} m_1 + p^{2} m_2 &\equiv 0 \mod{q}\\  
+m_1 (c_2+p^{2}) - m_2 (c_1+p^{2}) - p (c_1 - c_2) &\equiv 0 \mod{q}\\ 
 \end{align}$$
 
 After all the manipulation, we can get
@@ -642,17 +642,17 @@ $$m_1 (c_2+p^{2}) - m_2 (c_1+p^{2}) - p (c_1 - c_2) - Kq =  0$$
 
 We can using this relationship to form the following lattice.
 $$\begin{align} 
-m_1 (c_2+p^{2}) - m_2 (c_1+p^{2}) - p (c_1 - c_2) - Kq &=  0\\
-m_1 &= m_1\ 
-m_2 &= m_2 \ 
-1 &= 1\ 
+m_1 (c_2+p^{2}) - m_2 (c_1+p^{2}) - p (c_1 - c_2) - Kq &=  0\\ 
+m_1 &= m_1 \\ 
+m_2 &= m_2 \\ 
+1 &= 1\\ 
 \end{align}$$
 
-$$\begin{align} m_1  \begin{bmatrix}  c_2+p^{2} \  1 \ 0 \ 0 \end{bmatrix}
-				 -m_2 \begin{bmatrix} c_1+p^{2} \  0 \  -1 \  0 \  \end{bmatrix}
-				 -\begin{bmatrix} p(c_1 - c_2) \ 0 \ 0 \ -1 \end{bmatrix}
-				 - K \begin{bmatrix} q \ 0 \ 0 \ 0 \end{bmatrix}
-				 =\begin{bmatrix} 0 \ m_1 \ m_2 \ 1 \end {bmatrix}
+$$\begin{align} m_1  \begin{bmatrix}  c_2+p^{2} \\  1 \\ 0 \\ 0 \end{bmatrix}
+				 -m_2 \begin{bmatrix} c_1+p^{2} \\  0 \\  -1 \\  0 \\  \end{bmatrix}
+				 -\begin{bmatrix} p(c_1 - c_2) \\ 0 \\ 0 \\ -1 \end{bmatrix}
+				 - K \begin{bmatrix} q \\ 0 \\ 0 \\ 0 \end{bmatrix}
+				 =\begin{bmatrix} 0 \\ m_1 \\ m_2 \\ 1 \end {bmatrix}
 				 \end{align} $$
 
 To make the resulting vector balanced, we apply a weight matrixs so that LLL can better find the target vector we want. See the solve script for more detail.

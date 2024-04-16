@@ -94,6 +94,13 @@ table th {
     opacity: 0.6;
 }
 
+/* make image full size */
+.post-content img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
 /* allow selecting images to be inverted on darkmode */
 .dark-mode img[src$='#_blog_img_darkmode_invert'] { 
     -webkit-filter: invert(1);

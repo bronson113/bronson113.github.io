@@ -468,9 +468,9 @@ We can first inspect the encrypt function. We see that two different sets of cou
 Other than the encrypt function, this challenge is quite a barebone example of a padding oracle attack. and So the main difficulty will be in figuring out how to apply the attack on the new CTR-PCBC-CTR mode.
  
 Let's first ignore the CTR modes as we should be able to adjust for them later. How does PCBC mode padding oracle work? If we look at the figure, you'll notice that controlling IV allows us to control the output of each block, since the result will snake through each plaintext and influence the next block accordingly. This can be used to directly influence the padding, and proceed with the normal padding oracle attack.
- 
-![](https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PCBC_encryption.svg/1920px-PCBC_encryption.svg.png)
-![](https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/PCBC_decryption.svg/1920px-PCBC_decryption.svg.png)
+
+![PCBC_encryption](https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PCBC_encryption.svg/1920px-PCBC_encryption.svg.png#_blog_img_darkmode_invert)
+![PCBC_decryption](https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/PCBC_decryption.svg/1920px-PCBC_decryption.svg.png#_blog_img_darkmode_invert)
 (Image quoted from [wikipedia](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Propagating_cipher_block_chaining_(PCBC)))
  
 Now we need to worry about the counters. We can recall that CTR acted like a stream cipher, meaning that characters at the correct place will be decrypted correctly. Naturally, if we keep the ciphertext where it should be, the decryption process will help us decrypt the correct plaintext, and we don't need to worry about them. Since controlling the IV allows us to control every block of the output, we can choose which block we want the padding to be at, and resolve this issue. See the solve script for more details.

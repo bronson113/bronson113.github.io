@@ -8,21 +8,11 @@ layout: about-me-page
 <span style="color:grey">*Animation - created with [shadertoy](https://www.shadertoy.com/view/cdBcWV)*</span>.
 
 
-
-
-Education
-: ### Purdue University
-: *BS in Cybersecurity \| Class of 2024*
-: Current GPA: 3.99 / 4.0
-: Dean's List: Spring 2023, Fall 2022, Spring 2022, Fall 2021, Fall 2020
-
----
-
 Experiences
 : ### Security Research Internship @ [Trapa Security](https://trapa.tw/)
-: *September 2023 - Present*
-: Analyzed security vulnerability in Linux Kernel
-: Created 1-day exploit to known vulnerability
+: *September 2023 - July 2024*
+: Extracted and Analyzed Firmwares form multiple IoT Device
+: Found new vulnerability in Realtek SDK \[[HITCON2024](https://hitcon.org/2024/CMT/agenda/44dc04b6-933f-4418-baee-ff8e3d3f5981/)\]\[[Bside Bloomington](https://bsidesbloomington.org/schedule)\]
 : ### IT Internship @ [CTS Corporation](https://www.ctscorp.com/)
 : *May 2023 - August 2023*
 : Integrated existing policy with security standards and identified the gaps during security audits
@@ -43,16 +33,29 @@ Experiences
 : Assisted 20 participants in generating ideas for security projects related to current technologies
 : Enhanced understanding of modern automobile security and their interactions with surroundings
 
+---
+
+Education
+: ### Purdue University
+: *BS in Cybersecurity \| Class of 2025*
+: Current GPA: 3.99 / 4.0
+: Dean's List: Spring 2023, Fall 2022, Spring 2022, Fall 2021, Fall 2020
 
 ---
 
 Competition and Awards
+: ### [HITCON CTF 2024](https://ctf2024.hitcon.org) (with TWN48)
+: *July 2024 - November 2023*
+: Created [4 challenges](https://github.com/bronson113/My_CTF_Challenges/tree/main/HITCON%20CTF%202024) for qualifier and [redacted] for final.
+: ### [DEFCON CTF 2024](https://defcon.org/)  (with if this works we'll get less next year) 
+: *August 2024* 
+: 7th Place (Final) / 10th Place (Qualifier) / 263 teams
 : ### [SECCON CTF 2023](https://ctf.seccon.jp/) (with ${CyStick})
 : *September 2023 - December 2023*
 : 3rd Place (Final) / 2nd Place (Qualifier) / 653 teams
 : ### [HITCON CTF 2023](https://hitcon.org/2023/carnival/CTF/) (with TWN48)
 : *August 2023 - November 2023*
-: Created 3 challenges for qualifier and 1 challenge for final 
+: Created [3 challenges](https://github.com/bronson113/My_CTF_Challenges/tree/main/HITCON%20CTF%202023) for qualifier and 1 challenge for final 
 : ### [Mitre eCTF 2023](https://ectf.mitre.org/) (with Purdue)
 : *Feburary 2023 - May 2023*
 : 6th Place /  80 teams \| Best Poster award
@@ -93,7 +96,7 @@ Project
 : Discoverd efficient attack method against novel padding method proposed in [this conference paper](https://link.springer.com/chapter/10.1007/978-3-319-30840-1_21)
 : Created a CTF challenge based on the attack method in HITCON CTF
 : ### [Vulnerability Explorer](https://github.com/bronson113/vuln_visualizer)
-: *January 2023 - current*   \|  Python, Flask, Compiler \| !Note that this project is still in idea phase 
+: *January 2023 - present*   \|  Python, Flask, Compiler \| !Note that this project is still in idea phase 
 : Visualized execution of vulnerable program graphically for better comprehension
 : Implemented simplified compiler for easy experimentation
 : ### [mktmpdir](https://github.com/bronson113/mktmpdir)

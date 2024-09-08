@@ -13,6 +13,10 @@ Experiences
 : *September 2023 - July 2024*
 : Extracted and Analyzed multiple firmware from multiple IoT devices
 : Found new vulnerability in Realtek SDK \[[HITCON2024](https://hitcon.org/2024/CMT/agenda/44dc04b6-933f-4418-baee-ff8e3d3f5981/)\]\[[Bside Bloomington](https://bsidesbloomington.org/schedule)\]
+: ### Full-stack Developer @ Freelence
+: September 2023 - Present
+: Designed and developed full-stack application for [Nippon Signal](https://www.signal.co.jp/)
+: ... to be continue
 : ### IT Internship @ [CTS Corporation](https://www.ctscorp.com/)
 : *May 2023 - August 2023*
 : Integrated existing policy with security standards and identified the gaps during security audits

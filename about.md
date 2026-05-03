@@ -60,10 +60,11 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {% endcapture %}
 {% include widgets/shader-embed.html title="Animated shader preview" autoplay="true" start_time="0" shader=about_shader %}
 
-<span style="color:grey">*Animation - recreated from [Shadertoy source](https://www.shadertoy.com/view/cdBcWV).*</span>
-
-
 Experiences
+: ### Offensive Security Engineer @ [Calif.io](https://calif.io/)
+: June 2025 - Present
+: Working on cool stuffs
+: Stay tuned!
 : ### Security Research Internship @ [TRAPA Security](https://trapa.tw/)
 : *September 2023 - July 2024*
 : Extracted and analyzed firmware from multiple IoT devices
@@ -71,7 +72,6 @@ Experiences
 : ### Full-stack Developer @ Freelance
 : September 2023 - Present
 : Designed and developed a full-stack application for [Nippon Signal](https://www.signal.co.jp/)
-: ... to be continued
 : ### IT Internship @ [CTS Corporation](https://www.ctscorp.com/)
 : *May 2023 - August 2023*
 : Integrated existing policy with security standards and identified gaps during security audits
@@ -97,12 +97,17 @@ Experiences
 Education
 : ### Purdue University
 : *BS in Cybersecurity \| Class of 2025*
-: Current GPA: 3.99 / 4.0
-: Dean's List: Spring 2023, Fall 2022, Spring 2022, Fall 2021, Fall 2020
+: Graduated with Highest Distinction, GPA 3.99 / 4.0
 
 ---
 
 Competition and Awards
+: ### [Mitre eCTF 2025](https://ectf.mitre.org/) (with Purdue)
+: *February 2025 - May 2025*
+: 2nd Place / 139 teams
+: ### [International Cybersecurity Challenge](https://icc.ecsc.eu/) (with Team Asia)
+: November 2024
+: 2nd Place
 : ### [HITCON CTF 2024](https://ctf2024.hitcon.org) (with TWN48)
 : *July 2024 - November 2024*
 : Created [4 challenges](https://github.com/bronson113/My_CTF_Challenges/tree/main/HITCON%20CTF%202024) for the qualifier and [redacted] for the final.

@@ -1,0 +1,13 @@
+<div
+  class="shader-embed js-shader-embed"
+  data-autoplay="{{ include.autoplay | default: 'false' }}"
+  data-start-time="{{ include.start_time | default: '0' }}"
+  style="height: {{ include.height | default: '360px' }};"
+>
+  <canvas class="shader-embed__canvas" aria-label="{{ include.title | default: 'Shader preview' }}"></canvas>
+  <div class="shader-embed__status" aria-live="polite"></div>
+  <script type="x-shader/x-fragment" class="shader-embed__source">{{ include.shader | strip }}</script>
+</div>
+{% if include.caption %}
+<p class="shader-embed__caption">{{ include.caption }}</p>
+{% endif %}

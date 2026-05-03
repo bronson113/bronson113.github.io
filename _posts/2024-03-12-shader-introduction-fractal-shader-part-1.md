@@ -41,7 +41,13 @@ color shader(pixel_x, pixel_y):
 
 It will take each pixel separately, assign the pixel's x coordinate to the red channel, the y coordinate to the green channel, and return the color. With every pixel colored, you get something like the following.
 
-<iframe width="100%" height="360" frameborder="0" src="https://www.shadertoy.com/embed/dt2czD?gui=false&t=0&paused=true" allowfullscreen></iframe>
+{% capture shader_embed_example_1 %}
+void mainImage(out vec4 fragColor, in vec2 fragCoord)
+{
+    fragColor = vec4(fragCoord.xy / 200.0, 0.0, 1.0);
+}
+{% endcapture %}
+{% include widgets/shader-embed.html title="Shader coordinate example" autoplay="false" start_time="0" shader=shader_embed_example_1 %}
 
 {% capture shader_example %}
 ```js
@@ -85,7 +91,23 @@ You might think: Why is math relevant here? Well, when we think of a picture, we
 
 Now, if we reverse that process, and try to determine if a point is in a circle, then each individual point can collectively draw a circle. This can be done by calculating the distance of each point to the center, and then checking if that distance is less than the radius! This can be generalized further. For any shape that we need to draw, we can find the formula that determines how far this point is from the shape. To better distinguish the inside of the shape from the outside, we'll try to make the formula produce a negative distance if it's inside the shape. This distance function is called the Signed Distance Function, or SDF for short. We can find the SDF for various shapes and use those to draw the shapes we want.
 
-<iframe width="100%" height="360" frameborder="0" src="https://www.shadertoy.com/embed/M3SXRh?gui=false&t=0&paused=true" allowfullscreen></iframe>
+{% capture shader_embed_example_2 %}
+float sdf_circle(vec2 coordinate, vec2 center, float radius){
+    return length(coordinate - center) - radius;
+}
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord)
+{
+    vec2 uv = (2.0 * fragCoord - iResolution.xy) / iResolution.y;
+
+    vec2 center = vec2(0.0, 0.0);
+    float dist = sdf_circle(uv, center, 0.5);
+    vec3 col = vec3(dist);
+
+    fragColor = vec4(col, 1.0);
+}
+{% endcapture %}
+{% include widgets/shader-embed.html title="Signed distance field circle example" autoplay="false" start_time="0" shader=shader_embed_example_2 %}
 
 {% capture shader_example_2 %}
 ```js
@@ -147,7 +169,23 @@ where f(x) is a smooth transition between 0 and 1. There are a lot of different 
 
 So if we use smootstep to clamp our value around 0.05, we get a black circle on a white background, since only the part that's close to our center circle gets a value close to 0. If we want to invert the color, simply subtract it from 1, and we get the following.
 
-<iframe width="100%" height="360" frameborder="0" src="https://www.shadertoy.com/embed/M3SXzh?gui=false&t=10&paused=true" allowfullscreen></iframe>
+{% capture shader_embed_example_3 %}
+float sdf_circle(vec2 coordinate, vec2 center, float radius){
+    return length(coordinate - center) - radius;
+}
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord)
+{
+    vec2 uv = (2.0 * fragCoord - iResolution.xy) / iResolution.y;
+
+    vec2 center = vec2(0.0, 0.0);
+    float dist = sdf_circle(uv, center, 0.5);
+    vec3 col = 1.0 - vec3(smoothstep(0.0, 0.05, abs(dist)));
+
+    fragColor = vec4(col, 1.0);
+}
+{% endcapture %}
+{% include widgets/shader-embed.html title="Smoothstep ring example" autoplay="false" start_time="10" shader=shader_embed_example_3 %}
 
 {% capture shader_example_3 %}
 ```js

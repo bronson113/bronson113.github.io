@@ -55,7 +55,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {% endcapture %}
 {% include widgets/shader-embed.html title="Animated shader preview" autoplay="true" start_time="0" shader=about_shader %}
 
-Offsensive Security Engineer @ [Calif.io](https://calif.io).
+Security Engineer @ [Calif.io](https://calif.io).
 
 B.S. Cybersecurity @ Purdue University.
 

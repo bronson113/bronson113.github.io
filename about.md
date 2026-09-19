@@ -61,7 +61,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {% include widgets/shader-embed.html title="Animated shader preview" autoplay="true" start_time="0" shader=about_shader %}
 
 Experiences
-: ### Offensive Security Engineer @ [Calif.io](https://calif.io/)
+: ### Security Engineer @ [Calif.io](https://calif.io/)
 : June 2025 - Present
 : Working on cool stuffs
 : Stay tuned!
